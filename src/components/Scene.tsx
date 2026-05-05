@@ -1,13 +1,13 @@
-import { useRef, useMemo, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows, Float } from '@react-three/drei'
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import * as THREE_TYPES from 'three'
 import * as THREE from 'three'
 import { ClothMesh } from './ClothMesh'
 import { Fan } from './Fan'
-import { useStoreTexture } from '../hooks/useStoreTexture'
+import { useSlideshowTexture } from '../hooks/useSlideshowTexture'
 
 interface SceneProps {
   windStrength: number
@@ -17,8 +17,7 @@ const FAN_POSITION = new THREE.Vector3(2.8, 0, 0.4)
 
 export function Scene({ windStrength }: SceneProps) {
   const { gl } = useThree()
-  const getTexture = useStoreTexture()
-  const texture    = useMemo(() => getTexture(), [getTexture])
+  const texture = useSlideshowTexture()
 
   // Shadow-map quality
   useEffect(() => {
