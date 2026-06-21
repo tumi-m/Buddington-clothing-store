@@ -282,7 +282,11 @@ function Pond({ position }: { position: [number, number, number] }) {
   )
 }
 
-// ── Hippo (low-poly) ───────────────────────────────────────────────────────────
+// ── Hippo (low-poly, proportionally corrected) ─────────────────────────────────
+// Barrel body (length ≈ 2.4× height), very short stubby pillar legs, an
+// ENORMOUS wide blunt head (~⅓ of the body), eyes/ears/nostrils high on top
+// of the skull (semiaquatic periscope placement), purplish-grey with a pinkish
+// underside, short tail. Per San Diego Zoo / Wikipedia hippo anatomy.
 interface AnimalProps {
   position: [number, number, number]
   rotation?: number
@@ -290,133 +294,188 @@ interface AnimalProps {
 }
 
 function Hippo({ position, rotation = 0, scale = 1 }: AnimalProps) {
-  const grey = '#8d8a92'
-  const dark = '#6f6c74'
-  const legs: [number, number][] = [[-0.7, -0.45], [0.7, -0.45], [-0.7, 0.45], [0.7, 0.45]]
+  const skin  = '#938a93'   // purplish grey
+  const dark  = '#6b636c'   // legs / lower jaw
+  const belly = '#c9a0a6'   // pinkish underside
+  const legs: [number, number][] = [[-0.75, -0.42], [0.75, -0.42], [-0.75, 0.42], [0.75, 0.42]]
   return (
     <group position={position} rotation={[0, rotation, 0]} scale={scale}>
-      {/* body */}
-      <mesh position={[0, 0.55, 0]} castShadow>
-        <boxGeometry args={[2.2, 1.05, 1.15]} />
-        <meshStandardMaterial color={grey} roughness={0.85} />
+      {/* Barrel body — capsule laid along X */}
+      <mesh position={[0, 0.64, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <capsuleGeometry args={[0.56, 1.7, 8, 16]} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.8, 0]} castShadow>
-        <sphereGeometry args={[0.62, 14, 12]} />
-        <meshStandardMaterial color={grey} roughness={0.85} />
+      {/* Pinkish belly */}
+      <mesh position={[0, 0.36, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <capsuleGeometry args={[0.4, 1.3, 6, 12]} />
+        <meshStandardMaterial color={belly} roughness={0.95} />
       </mesh>
-      {/* legs */}
+      {/* Enormous wide head — rounded dome */}
+      <mesh position={[1.2, 0.68, 0]} castShadow>
+        <sphereGeometry args={[0.64, 16, 14]} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
+      </mesh>
+      {/* Wide blunt snout */}
+      <mesh position={[1.62, 0.52, 0]} castShadow>
+        <boxGeometry args={[0.6, 0.5, 1.22]} />
+        <meshStandardMaterial color={skin} roughness={0.9} />
+      </mesh>
+      {/* Lower jaw / mouth line */}
+      <mesh position={[1.55, 0.35, 0]}>
+        <boxGeometry args={[0.55, 0.16, 1.12]} />
+        <meshStandardMaterial color={dark} roughness={0.95} />
+      </mesh>
+      {/* Legs — short stubby pillars */}
       {legs.map((p, i) => (
-        <mesh key={i} position={[p[0], 0.2, p[1]]} castShadow>
-          <cylinderGeometry args={[0.18, 0.2, 0.4, 8]} />
-          <meshStandardMaterial color={dark} roughness={0.9} />
+        <mesh key={i} position={[p[0], 0.22, p[1]]} castShadow>
+          <cylinderGeometry args={[0.19, 0.21, 0.44, 10]} />
+          <meshStandardMaterial color={dark} roughness={0.95} />
         </mesh>
       ))}
-      {/* head + snout */}
-      <mesh position={[1.25, 0.6, 0]} castShadow>
-        <boxGeometry args={[0.95, 0.78, 1.05]} />
-        <meshStandardMaterial color={grey} roughness={0.85} />
-      </mesh>
-      <mesh position={[1.78, 0.42, 0]} castShadow>
-        <boxGeometry args={[0.55, 0.42, 0.95]} />
-        <meshStandardMaterial color={grey} roughness={0.85} />
-      </mesh>
-      {/* eyes */}
-      {[[1.58, 0.86, 0.4], [1.58, 0.86, -0.4]].map((p, i) => (
-        <mesh key={i} position={p as [number, number, number]}>
-          <sphereGeometry args={[0.07, 8, 8]} />
-          <meshStandardMaterial color="#15150f" />
-        </mesh>
+      {/* Eyes — bulging, high on top of the head (periscope) */}
+      {[[1.04, 1.02, 0.3], [1.04, 1.02, -0.3]].map((p, i) => (
+        <group key={i} position={p as [number, number, number]}>
+          <mesh><sphereGeometry args={[0.1, 10, 10]} /><meshStandardMaterial color={skin} /></mesh>
+          <mesh position={[0.06, 0.02, 0]}><sphereGeometry args={[0.05, 8, 8]} /><meshStandardMaterial color="#15150f" /></mesh>
+        </group>
       ))}
-      {/* ears */}
-      {[[1.05, 1.05, 0.42, 0.4], [1.05, 1.05, -0.42, -0.4]].map((p, i) => (
+      {/* Ears — small, atop the head behind the eyes */}
+      {[[0.6, 1.08, 0.4, 0.5], [0.6, 1.08, -0.4, -0.5]].map((p, i) => (
         <mesh key={i} position={[p[0], p[1], p[2]]} rotation={[0, 0, p[3]]}>
-          <coneGeometry args={[0.1, 0.18, 6]} />
-          <meshStandardMaterial color={dark} />
+          <coneGeometry args={[0.11, 0.16, 6]} />
+          <meshStandardMaterial color={skin} />
         </mesh>
       ))}
-      {/* nostrils */}
-      {[[2.05, 0.5, 0.18], [2.05, 0.5, -0.18]].map((p, i) => (
-        <mesh key={i} position={p as [number, number, number]}>
-          <sphereGeometry args={[0.04, 6, 6]} />
+      {/* Nostrils — on top of the snout */}
+      {[[1.9, 0.72, 0.18], [1.9, 0.72, -0.18]].map((p, i) => (
+        <mesh key={i} position={p as [number, number, number]} rotation={[-Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.045, 0.045, 0.05, 8]} />
           <meshStandardMaterial color="#15150f" />
         </mesh>
       ))}
+      {/* Short tail */}
+      <mesh position={[-1.42, 0.62, 0]} rotation={[0, 0, -0.5]}>
+        <cylinderGeometry args={[0.04, 0.03, 0.34, 6]} />
+        <meshStandardMaterial color={skin} />
+      </mesh>
     </group>
   )
 }
 
-// ── Cow (low-poly) ─────────────────────────────────────────────────────────────
+// ── Cow (low-poly, proportionally corrected — Holstein-type) ──────────────────
+// Rectangular barrel body, longer legs than the hippo, a NECK connecting body
+// to a forward head, an UDDER with four teats under the belly, CLOVEN hooves,
+// curved horns, large lateral ears, a dewlap, and a long tail with a switch.
+// White with black side patches. Per Budras bovine anatomy / ICAR conformation.
 function Cow({ position, rotation = 0, scale = 1 }: AnimalProps) {
-  const white = '#f3efe6'
-  const black = '#1c1c1c'
-  const pink = '#e6a9a0'
-  const legs: [number, number][] = [[-0.7, -0.45], [0.7, -0.45], [-0.7, 0.45], [0.7, 0.45]]
-  const patches: [number, number, number][] = [[0.4, 0.4, 0.4], [-0.3, -0.3, 0.3], [0.2, -0.2, -0.35], [-0.5, 0.1, -0.2]]
+  const white = '#f2eee4'
+  const black = '#1a1a1a'
+  const pink = '#e3a39a'
+  const hoof = '#2a2520'
+  const horn = '#e8e0c8'
+  const legs: [number, number][] = [[-0.72, -0.4], [0.72, -0.4], [-0.72, 0.4], [0.72, 0.4]]
+  // Black patches — flattened ellipsoids on the body sides + top + rump.
+  const patches: { p: [number, number, number]; s: [number, number, number] }[] = [
+    { p: [0.45, 1.36, 0.1],  s: [0.34, 0.08, 0.3] },
+    { p: [0.1, 0.95, 0.5],   s: [0.32, 0.24, 0.06] },
+    { p: [-0.3, 1.0, -0.5],  s: [0.3, 0.22, 0.06] },
+    { p: [-0.95, 1.32, 0],   s: [0.26, 0.08, 0.28] },
+    { p: [0.7, 1.12, 0.42],  s: [0.2, 0.16, 0.06] },
+    { p: [-0.5, 0.7, -0.46], s: [0.22, 0.18, 0.06] },
+  ]
   return (
     <group position={position} rotation={[0, rotation, 0]} scale={scale}>
-      {/* body */}
-      <mesh position={[0, 0.75, 0]} castShadow>
-        <boxGeometry args={[2.2, 1.1, 1.1]} />
-        <meshStandardMaterial color={white} roughness={0.9} />
+      {/* Body — rectangular barrel (capsule along X) */}
+      <mesh position={[0, 0.86, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <capsuleGeometry args={[0.52, 1.5, 8, 16]} />
+        <meshStandardMaterial color={white} roughness={0.95} />
       </mesh>
-      {/* patches (on top) */}
-      {patches.map((p, i) => (
-        <mesh key={i} position={[p[0], 1.31, p[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.22, 12]} />
-          <meshStandardMaterial color={black} roughness={0.9} side={THREE.DoubleSide} />
+      {/* Patches */}
+      {patches.map((pt, i) => (
+        <mesh key={i} position={pt.p} scale={pt.s}>
+          <sphereGeometry args={[1, 12, 10]} />
+          <meshStandardMaterial color={black} roughness={0.95} />
         </mesh>
       ))}
-      {/* legs + hooves */}
-      {legs.map((p, i) => (
-        <group key={i}>
-          <mesh position={[p[0], 0.3, p[1]]} castShadow>
-            <cylinderGeometry args={[0.13, 0.14, 0.6, 8]} />
-            <meshStandardMaterial color={white} roughness={0.9} />
-          </mesh>
-          <mesh position={[p[0], 0.04, p[1]]}>
-            <cylinderGeometry args={[0.14, 0.12, 0.12, 8]} />
-            <meshStandardMaterial color={black} roughness={0.9} />
-          </mesh>
-        </group>
-      ))}
-      {/* head + nose */}
-      <mesh position={[1.32, 0.85, 0]} castShadow>
-        <boxGeometry args={[0.6, 0.72, 0.7]} />
-        <meshStandardMaterial color={white} roughness={0.9} />
+      {/* Neck — forward-down from body to head */}
+      <mesh position={[1.08, 0.74, 0]} rotation={[0, 0, -0.55]} castShadow>
+        <capsuleGeometry args={[0.27, 0.45, 6, 12]} />
+        <meshStandardMaterial color={white} roughness={0.95} />
       </mesh>
-      <mesh position={[1.63, 0.68, 0]}>
-        <boxGeometry args={[0.16, 0.24, 0.5]} />
-        <meshStandardMaterial color={pink} roughness={0.8} />
+      {/* Dewlap under the neck */}
+      <mesh position={[0.98, 0.46, 0]}>
+        <boxGeometry args={[0.48, 0.16, 0.4]} />
+        <meshStandardMaterial color={white} roughness={0.95} />
       </mesh>
-      {/* horns */}
-      {[[1.36, 1.28, 0.18, -0.5], [1.36, 1.28, -0.18, 0.5]].map((p, i) => (
-        <mesh key={i} position={[p[0], p[1], p[2]]} rotation={[0, 0, p[3]]}>
-          <coneGeometry args={[0.05, 0.2, 6]} />
-          <meshStandardMaterial color="#e8e0c8" />
-        </mesh>
-      ))}
-      {/* ears */}
-      {[[1.12, 1.0, 0.4, 0.6], [1.12, 1.0, -0.4, -0.6]].map((p, i) => (
-        <mesh key={i} position={[p[0], p[1], p[2]]} rotation={[0, 0, p[3]]}>
-          <sphereGeometry args={[0.12, 8, 6]} />
-          <meshStandardMaterial color={white} />
-        </mesh>
-      ))}
-      {/* eyes */}
-      {[[1.6, 1.0, 0.22], [1.6, 1.0, -0.22]].map((p, i) => (
+      {/* Head */}
+      <mesh position={[1.62, 0.92, 0]} castShadow>
+        <boxGeometry args={[0.56, 0.62, 0.5]} />
+        <meshStandardMaterial color={white} roughness={0.95} />
+      </mesh>
+      {/* Muzzle / pink nose */}
+      <mesh position={[1.92, 0.8, 0]}>
+        <boxGeometry args={[0.22, 0.34, 0.46]} />
+        <meshStandardMaterial color={pink} roughness={0.85} />
+      </mesh>
+      {/* Eyes — sides of head */}
+      {[[1.72, 1.04, 0.26], [1.72, 1.04, -0.26]].map((p, i) => (
         <mesh key={i} position={p as [number, number, number]}>
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshStandardMaterial color="#15150f" />
         </mesh>
       ))}
-      {/* tail */}
-      <mesh position={[-1.15, 0.9, 0]} rotation={[0, 0, 0.4]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.6, 6]} />
+      {/* Horns — curved up & slightly out */}
+      {[[1.52, 1.26, 0.16, -0.35], [1.52, 1.26, -0.16, 0.35]].map((p, i) => (
+        <mesh key={i} position={[p[0], p[1], p[2]]} rotation={[0, 0, p[3]]}>
+          <coneGeometry args={[0.05, 0.22, 6]} />
+          <meshStandardMaterial color={horn} />
+        </mesh>
+      ))}
+      {/* Ears — large, pointing laterally (out to the sides) */}
+      {[[1.5, 0.98, 0.4, Math.PI / 2, -0.2], [1.5, 0.98, -0.4, -Math.PI / 2, -0.2]].map((p, i) => (
+        <mesh key={i} position={[p[0], p[1], p[2]]} rotation={[p[3], 0, p[4]]}>
+          <coneGeometry args={[0.08, 0.26, 6]} />
+          <meshStandardMaterial color={white} roughness={0.95} />
+        </mesh>
+      ))}
+      {/* Legs + cloven hooves (two dark toes each) */}
+      {legs.map((p, i) => (
+        <group key={i}>
+          <mesh position={[p[0], 0.45, p[1]]} castShadow>
+            <cylinderGeometry args={[0.11, 0.12, 0.7, 8]} />
+            <meshStandardMaterial color={white} roughness={0.95} />
+          </mesh>
+          <mesh position={[p[0], 0.07, p[1] + 0.06]}>
+            <boxGeometry args={[0.15, 0.1, 0.07]} />
+            <meshStandardMaterial color={hoof} roughness={0.9} />
+          </mesh>
+          <mesh position={[p[0], 0.07, p[1] - 0.06]}>
+            <boxGeometry args={[0.15, 0.1, 0.07]} />
+            <meshStandardMaterial color={hoof} roughness={0.9} />
+          </mesh>
+        </group>
+      ))}
+      {/* Udder — pink, under the rear belly, with four teats */}
+      <group position={[-0.25, 0.42, 0]}>
+        <mesh>
+          <sphereGeometry args={[0.26, 12, 10]} />
+          <meshStandardMaterial color={pink} roughness={0.8} />
+        </mesh>
+        {[[0.12, -0.18, 0.12], [-0.12, -0.18, 0.12], [0.12, -0.18, -0.12], [-0.12, -0.18, -0.12]].map((t, i) => (
+          <mesh key={i} position={[t[0], t[1], t[2]]}>
+            <cylinderGeometry args={[0.04, 0.035, 0.13, 6]} />
+            <meshStandardMaterial color={pink} roughness={0.8} />
+          </mesh>
+        ))}
+      </group>
+      {/* Tail — long, dropping back, with a dark switch */}
+      <mesh position={[-1.2, 0.95, 0]} rotation={[0, 0, -2.4]}>
+        <cylinderGeometry args={[0.035, 0.03, 0.8, 6]} />
         <meshStandardMaterial color={white} />
       </mesh>
-      <mesh position={[-1.38, 0.62, 0]}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshStandardMaterial color={black} />
+      <mesh position={[-1.45, 0.5, 0]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshStandardMaterial color={black} roughness={0.95} />
       </mesh>
     </group>
   )
