@@ -4,18 +4,19 @@
 
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
-import { AssetPlate } from './AssetPlate'
 
 interface GhostItem {
   code: string
   name: string
   price: string
+  /** Real photograph (public/images/) — rendered monochrome to read as GHOST. */
+  image: string
 }
 
 const GHOST_ITEMS: GhostItem[] = [
-  { code: 'GHOST-01', name: 'Spectre Shell',   price: '£ 720' },
-  { code: 'GHOST-02', name: 'Phantom Hood',   price: '£ 540' },
-  { code: 'GHOST-03', name: 'Wraith Trouser', price: '£ 430' },
+  { code: 'GHOST-01', name: 'Spectre Shell',   price: '£ 720', image: '/images/IMG_5678.PNG' },
+  { code: 'GHOST-02', name: 'Phantom Hood',   price: '£ 540', image: '/images/IMG_5888.PNG' },
+  { code: 'GHOST-03', name: 'Wraith Trouser', price: '£ 430', image: '/images/IMG_5912.PNG' },
 ]
 
 export function GhostCapsule() {
@@ -59,19 +60,27 @@ export function GhostCapsule() {
             {GHOST_ITEMS.map(item => (
               <div key={item.code} className="bg-ink border border-gold-dark/40">
                 <div
-                  className="relative"
+                  className="relative overflow-hidden"
                   style={{ aspectRatio: '1 / 1' }}
                 >
+                  {/* Real photograph, rendered monochrome + darkened to read as GHOST */}
+                  <img
+                    src={item.image}
+                    alt={`${item.name} — GHOST capsule`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ filter: 'grayscale(1) contrast(1.08) brightness(0.78)' }}
+                  />
+                  {/* Ink wash so the image sits in the dark GHOST surface */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(180deg, rgba(16,16,15,0.25), rgba(16,16,15,0.55))' }}
+                    aria-hidden="true"
+                  />
+                  {/* Adversarial dazzle, kept on top at 8% */}
                   <div
                     className="absolute inset-0 opacity-[0.08] pointer-events-none"
                     style={{ backgroundImage: "url('/generated/ghost-dazzle.svg')", backgroundSize: 'cover' }}
                     aria-hidden="true"
-                  />
-                  <AssetPlate
-                    label={`${item.code} / FRONT`}
-                    ratio="1 / 1"
-                    tone="ink"
-                    className="relative w-full h-full"
                   />
                 </div>
                 <div className="p-4 flex items-center justify-between">
