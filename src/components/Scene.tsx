@@ -9,6 +9,7 @@ import { ClothMesh } from './ClothMesh'
 import { Fan } from './Fan'
 import { SkyDome } from './SkyDome'
 import { WeatherParticles } from './WeatherParticles'
+import { Nature } from './Nature'
 import { useSlideshowTexture } from '../hooks/useSlideshowTexture'
 import type { Weather, DayNight } from '../types'
 
@@ -170,7 +171,7 @@ export function Scene({ windStrength, weather, dayNight }: SceneProps) {
       {/* ── Fan ─────────────────────────────────────────────────────────── */}
       <Fan position={FAN_POSITION} windStrength={windStrength} />
 
-      {/* ── Ground shadow ───────────────────────────────────────────────── */}
+      {/* ── Ground shadow (soft blob under the hanging cloth) ──────────── */}
       <ContactShadows
         position={[0, -2.2, 0]}
         opacity={env.shadowOpacity}
@@ -180,15 +181,8 @@ export function Scene({ windStrength, weather, dayNight }: SceneProps) {
         color="#000000"
       />
 
-      {/* ── Windtunnel floor ─────────────────────────────────────────────── */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.2, 0]} receiveShadow>
-        <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color={env.floor} roughness={1} />
-      </mesh>
-      <gridHelper
-        args={[60, 60, env.gridCenter, env.grid]}
-        position={[0, -2.19, 0]}
-      />
+      {/* ── Lush nature ground (replaces the windtunnel floor) ──────────── */}
+      <Nature weather={weather} dayNight={dayNight} />
 
       {/* ── Environment (HDRI reflections only) ──────────────────────────── */}
       <Environment preset="studio" background={false} />
