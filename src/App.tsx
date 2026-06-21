@@ -15,7 +15,7 @@ import { Shop } from './components/Shop'
 import { ProductDetail } from './components/ProductDetail'
 import { GhostCapsule } from './components/GhostCapsule'
 import { getProductById } from './data/products'
-import type { View } from './types'
+import type { View, Weather, DayNight } from './types'
 
 function Loader() {
   return (
@@ -37,9 +37,15 @@ export default function App() {
   const [view, setView] = useState<View>('home')
   const [productId, setProductId] = useState<string | null>(null)
 
-  // 3D cloth experience state (unchanged wiring).
+  // 3D cloth experience state (existing wiring intact + weather/day-night).
   const [windStrength, setWindStrength] = useState(0.5)
   const [showInfo, setShowInfo] = useState(false)
+  const [weather, setWeather] = useState<Weather>('sunny')
+  const [dayNight, setDayNight] = useState<DayNight>('day')
+
+  const toggleDayNight = useCallback(() => {
+    setDayNight(d => (d === 'day' ? 'night' : 'day'))
+  }, [])
 
   const navigate = useCallback((v: View) => {
     setView(v)
@@ -74,7 +80,7 @@ export default function App() {
               far:      50,
             }}
           >
-            <Scene windStrength={windStrength} />
+            <Scene windStrength={windStrength} weather={weather} dayNight={dayNight} />
           </Canvas>
         </Suspense>
 
@@ -84,6 +90,10 @@ export default function App() {
           onInfoToggle={() => setShowInfo(p => !p)}
           showInfo={showInfo}
           onNavigate={navigate}
+          weather={weather}
+          onWeatherChange={setWeather}
+          dayNight={dayNight}
+          onDayNightToggle={toggleDayNight}
         />
 
         {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}

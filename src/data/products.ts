@@ -6,11 +6,13 @@
 // single source of truth for the editorial screens; the 3D texture keeps its
 // own decorative copy.
 //
-// Real garment photographs of a fictional brand do not exist (image policy
-// Tier 3, AGENTS.md). `image` is therefore optional; screens render
-// <AssetPlate/> when it is absent. Fill `image` only with a REAL path confirmed
-// in discovery (the six files under public/images/ are slideshow art, not
-// garment product shots, so they are NOT wired here).
+// Real garment photographs of a fictional brand do not exist as dedicated
+// product shots. However, the user directed that the six real photographs in
+// public/images/ (originally slideshow art for the 3D cloth) be reused as the
+// editorial product imagery in place of <AssetPlate/> placeholders. They are
+// real existing files (image policy Tier 3, AGENTS.md), so `image` is now
+// populated for every product. Back-of-garment shots still do not exist —
+// ProductDetail keeps an <AssetPlate/> for the back plate (see MISSING ASSETS).
 
 export type ProductCategory = 'outerwear' | 'tailoring' | 'knitwear' | 'trousers'
 
@@ -46,6 +48,7 @@ export const PRODUCTS: Product[] = [
     badge: 'NEW',
     colorway: 'Obsidian / Black',
     description: 'Weighted wool melton, blind-stitched hem. A coat that carries its own quiet mass.',
+    image: '/images/IMG_5888.PNG',
   },
   {
     id: 'void-jacket',
@@ -56,6 +59,7 @@ export const PRODUCTS: Product[] = [
     category: 'outerwear',
     colorway: 'Soot / Char',
     description: 'Technical shell with taped seams and a dropped shoulder line.',
+    image: '/images/IMG_6300.PNG',
   },
   {
     id: 'dusk-trousers',
@@ -67,6 +71,7 @@ export const PRODUCTS: Product[] = [
     badge: 'LAST PIECE',
     colorway: 'Dusk / Olive-black',
     description: 'High-rise, tapered leg. Side-release closure at the waist.',
+    image: '/images/IMG_5912.PNG',
   },
   {
     id: 'ashford-blazer',
@@ -77,6 +82,7 @@ export const PRODUCTS: Product[] = [
     category: 'tailoring',
     colorway: 'Ash / Stone',
     description: 'Unstructured one-button silhouette in pressed mohair blend.',
+    image: '/images/IMG_5821.jpg',
   },
   {
     id: 'monolith-knit',
@@ -88,6 +94,7 @@ export const PRODUCTS: Product[] = [
     badge: 'NEW',
     colorway: 'Monolith / Carbon',
     description: 'Heavy-gauge merino with a rolled crew neck.',
+    image: '/images/IMG_5822.jpg',
   },
   {
     id: 'verge-overshirt',
@@ -98,6 +105,7 @@ export const PRODUCTS: Product[] = [
     category: 'outerwear',
     colorway: 'Verge / Slate',
     description: 'Boxy overshirt cut from waxed cotton, worn open or buttoned through.',
+    image: '/images/IMG_5678.PNG',
   },
 ]
 

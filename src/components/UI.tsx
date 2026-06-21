@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { View } from '../types'
+import type { View, Weather, DayNight } from '../types'
 
 interface UIProps {
   windStrength: number
@@ -8,9 +8,17 @@ interface UIProps {
   showInfo: boolean
   /** Optional view-state switcher. When provided, the overlay nav becomes live. */
   onNavigate?: (v: View) => void
+  /** Optional weather + day/night controls for the experience view. */
+  weather?: Weather
+  onWeatherChange?: (w: Weather) => void
+  dayNight?: DayNight
+  onDayNightToggle?: () => void
 }
 
-export function UI({ windStrength, onWindChange, onInfoToggle, showInfo, onNavigate }: UIProps) {
+export function UI({
+  windStrength, onWindChange, onInfoToggle, showInfo,
+  onNavigate, weather, onWeatherChange, dayNight, onDayNightToggle,
+}: UIProps) {
   const [fanOn, setFanOn] = useState(true)
 
   const toggleFan = () => {
@@ -36,6 +44,38 @@ export function UI({ windStrength, onWindChange, onInfoToggle, showInfo, onNavig
 
       {/* ── Controls panel (bottom-right) ────────────────────────────────── */}
       <div className="absolute bottom-6 right-6 flex flex-col gap-3 items-end">
+
+        {/* Weather selector + day/night */}
+        {onWeatherChange && weather && (
+          <div className="bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 min-w-[210px]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Weather</span>
+              {onDayNightToggle && dayNight && (
+                <button
+                  onClick={onDayNightToggle}
+                  className="text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 border-gold text-gold hover:bg-gold hover:text-black"
+                >
+                  {dayNight === 'day' ? '☀ DAY' : '☾ NIGHT'}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1.5">
+              {(['sunny', 'windy', 'rain', 'snow', 'hail'] as Weather[]).map(w => (
+                <button
+                  key={w}
+                  onClick={() => onWeatherChange(w)}
+                  className={`text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 ${
+                    weather === w
+                      ? 'border-gold text-gold'
+                      : 'border-gray-700 text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {w.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Wind control */}
         <div className="bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 min-w-[200px]">

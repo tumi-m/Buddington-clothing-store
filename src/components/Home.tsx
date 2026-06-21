@@ -5,7 +5,6 @@
 import type { View } from '../types'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
-import { AssetPlate } from './AssetPlate'
 
 export interface HomeProps {
   onNavigate: (v: View) => void
@@ -69,17 +68,21 @@ export function Home({ onNavigate }: HomeProps) {
             </div>
           </div>
 
-          {/* Right: hero plate (MISSING real photo — AssetPlate until supplied) */}
+          {/* Right: hero image — real photo (public/images/IMG_5678.PNG),
+              borderless, bleeds to cell edge per house grammar. object-cover
+              crops to the 4/5 plate ratio. */}
           <div
             className="reveal lg:col-span-5 flex items-center"
             style={{ animationDelay: '480ms' }}
           >
-            <AssetPlate
-              label="A41 / HERO"
-              ratio="4/5"
-              tone="ink"
-              className="w-full max-w-[26rem] ml-auto"
-            />
+            <div className="w-full max-w-[26rem] ml-auto overflow-hidden">
+              <img
+                src="/images/IMG_5678.PNG"
+                alt="Buddington A/W 41 — hero look"
+                className="w-full object-cover"
+                style={{ aspectRatio: '4 / 5' }}
+              />
+            </div>
           </div>
         </div>
       </section>
