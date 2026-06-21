@@ -21,10 +21,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: #C9A96E; border-radius: 2px; }
+/* Custom scrollbar — house gold */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f4f1ea; }
+::-webkit-scrollbar-thumb { background: #c9a44c; border-radius: 2px; }
+
+/* Editorial reveal motion — restrained, house grammar */
+@keyframes buddington-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.reveal {
+  animation: buddington-reveal 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* GHOST background drift — slow adversarial feel */
+@keyframes buddington-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 512px 512px; }
+}
+.ghost-drift {
+  animation: buddington-drift 24s linear infinite;
+}
+
+/* Accessible focus ring — house gold */
+:focus-visible {
+  outline: 2px solid #c9a44c;
+  outline-offset: 2px;
+}
+
+/* prefers-reduced-motion — freeze all decorative motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .ghost-drift {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Range input styling */
 input[type="range"] {

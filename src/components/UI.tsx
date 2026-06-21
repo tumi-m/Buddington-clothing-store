@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import type { View } from '../types'
 
 interface UIProps {
   windStrength: number
   onWindChange: (v: number) => void
   onInfoToggle: () => void
   showInfo: boolean
+  /** Optional view-state switcher. When provided, the overlay nav becomes live. */
+  onNavigate?: (v: View) => void
 }
 
-export function UI({ windStrength, onWindChange, onInfoToggle, showInfo }: UIProps) {
+export function UI({ windStrength, onWindChange, onInfoToggle, showInfo, onNavigate }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
 
   const toggleFan = () => {
@@ -86,15 +89,25 @@ export function UI({ windStrength, onWindChange, onInfoToggle, showInfo }: UIPro
 
       {/* ── Top-right nav ────────────────────────────────────────────────── */}
       <div className="absolute top-6 right-6 flex gap-6 items-center">
-        {['COLLECTION', 'LOOKBOOK', 'STORES'].map(item => (
+        {([
+          { label: 'COLLECTION', view: 'shop' as View },
+          { label: 'LOOKBOOK',    view: 'ghost' as View },
+          { label: 'STORES',      view: 'home' as View },
+        ]).map(item => (
           <button
-            key={item}
-            className="text-xs tracking-widest text-gray-600 hover:text-gold transition-colors duration-200 font-light"
+            key={item.label}
+            onClick={() => onNavigate?.(item.view)}
+            disabled={!onNavigate}
+            className="text-xs tracking-widest text-gray-600 hover:text-gold transition-colors duration-200 font-light disabled:cursor-default disabled:hover:text-gray-600"
           >
-            {item}
+            {item.label}
           </button>
         ))}
-        <button className="text-xs tracking-widest border border-gold text-gold px-4 py-1.5 hover:bg-gold hover:text-black transition-all duration-200">
+        <button
+          onClick={() => onNavigate?.('shop')}
+          disabled={!onNavigate}
+          className="text-xs tracking-widest border border-gold text-gold px-4 py-1.5 hover:bg-gold hover:text-black transition-all duration-200 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-gold"
+        >
           SHOP
         </button>
       </div>
