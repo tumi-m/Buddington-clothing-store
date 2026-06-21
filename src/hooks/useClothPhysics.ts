@@ -8,8 +8,8 @@ export const CLOTH_H = 3.0  // world-space height
 const N = COLS * ROWS
 
 const GRAVITY     = -0.0055
-const DAMPING     = 0.99
-const ITERATIONS  = 8   // constraint solving passes per frame
+const DAMPING     = 0.987   // slightly silkier settle (less perpetual sway)
+const ITERATIONS  = 10      // more constraint passes → less stretchy, more fabric-like
 
 export interface ClothPhysicsHandle {
   positions: Float32Array
@@ -123,30 +123,34 @@ export function useClothPhysics(): ClothPhysicsHandle {
       // gravity
       a[iy] += GRAVITY
 
-      // wind from fan (inverse-square falloff + turbulence)
+      // wind from fan (inverse-square falloff + turbulence + slow gust envelope)
       if (windStrength > 0) {
+        // Gust: wind breathes between ~65% and ~100% so it feels alive, not constant.
+        const gust = 0.65 + 0.35 * Math.sin(time * 0.55)
+        const w    = windStrength * gust
+
         const dx   = p[ix] - fanX
         const dy   = p[iy] - fanY
         const dz   = p[iz] - fanZ
         const dist2 = dx*dx + dy*dy + dz*dz
         const fall = Math.min(1.0, 5.0 / (dist2 + 0.4))
         const turb = (Math.sin(time*4.1 + row*0.52) * Math.cos(time*3.3 + col*0.31)) * 0.35
-        const wf   = windStrength * (1 + turb) * fall
+        const wf   = w * (1 + turb) * fall
 
-        a[ix] += -wf                                                          // primary blow direction (-X)
-        a[iy] += Math.sin(time*2.0 + col*0.21) * windStrength * 0.04         // vertical flutter
-        a[iz] += Math.sin(time*3.1 + row*0.41 + col*0.19) * windStrength * 0.12 // depth wave
+        a[ix] += -wf                                                  // primary blow direction (-X)
+        a[iy] += Math.sin(time*2.0 + col*0.21) * w * 0.04             // vertical flutter
+        a[iz] += Math.sin(time*3.1 + row*0.41 + col*0.19) * w * 0.12  // depth wave
       }
 
-      // mouse repulsion / attraction
+      // mouse repulsion / attraction (poke on click)
       if (hasMousePos) {
         const dx   = p[ix] - mouseX
         const dy   = p[iy] - mouseY
         const dz   = p[iz] - mouseZ
         const dist = Math.sqrt(dx*dx + dy*dy + dz*dz)
-        const r    = isMouseDown ? 0.65 : 0.38
+        const r    = isMouseDown ? 0.72 : 0.42
         if (dist < r && dist > 0.001) {
-          const f = ((r - dist) / r) * (isMouseDown ? 0.09 : 0.025)
+          const f = ((r - dist) / r) * (isMouseDown ? 0.11 : 0.028)
           a[ix] += (dx / dist) * f
           a[iy] += (dy / dist) * f
           a[iz] += (dz / dist) * f

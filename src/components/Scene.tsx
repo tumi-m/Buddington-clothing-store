@@ -24,13 +24,13 @@ export function Scene({ windStrength }: SceneProps) {
     gl.shadowMap.enabled = true
     gl.shadowMap.type    = THREE.PCFSoftShadowMap
     gl.toneMapping       = THREE.ACESFilmicToneMapping
-    gl.toneMappingExposure = 1.1
+    gl.toneMappingExposure = 1.05
   }, [gl])
 
   return (
     <>
       {/* ── Lights ──────────────────────────────────────────────────────── */}
-      <ambientLight intensity={0.25} />
+      <ambientLight intensity={0.3} />
 
       {/* Key light — slightly warm */}
       <directionalLight
@@ -47,11 +47,11 @@ export function Scene({ windStrength }: SceneProps) {
         shadow-camera-bottom={-5}
       />
 
-      {/* Rim light — gold from below-right */}
+      {/* Rim light — house gold from below-right */}
       <directionalLight
         position={[3, -2, 3]}
         intensity={0.7}
-        color="#c9a96e"
+        color="#c9a44c"
       />
 
       {/* Fill light — cool blue from left */}
@@ -108,18 +108,18 @@ export function Scene({ windStrength }: SceneProps) {
       {/* ── Post-processing ──────────────────────────────────────────────── */}
       <EffectComposer>
         <Bloom
-          luminanceThreshold={0.28}
+          luminanceThreshold={0.3}
           luminanceSmoothing={0.85}
-          intensity={0.55}
+          intensity={0.5}
           blendFunction={BlendFunction.ADD}
         />
         <ChromaticAberration
-          offset={new THREE_TYPES.Vector2(0.0004, 0.0004)}
+          offset={new THREE_TYPES.Vector2(0.0003, 0.0003)}
           blendFunction={BlendFunction.NORMAL}
           radialModulation={false}
           modulationOffset={0}
         />
-        <Vignette offset={0.38} darkness={0.72} />
+        <Vignette offset={0.32} darkness={0.62} />
       </EffectComposer>
     </>
   )

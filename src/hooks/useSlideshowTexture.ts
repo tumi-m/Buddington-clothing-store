@@ -11,7 +11,7 @@ const SLIDE_IMAGES = [
   '/images/IMG_5678.PNG',
 ]
 
-const INTERVAL_MS = 2000
+const INTERVAL_MS = 3000
 
 export function useSlideshowTexture() {
   const [texture, setTexture] = useState<THREE.Texture | null>(null)
