@@ -77,7 +77,10 @@ export default function App() {
               position: [0, 0.2, 6],
               fov:      42,
               near:     0.1,
-              far:      50,
+              // Far plane must clear the SkyDome (r=60) and Stars (r=80), else the
+              // sky is clipped and the canvas clear colour (black, alpha:false)
+              // shows through — which is what made the background always black.
+              far:      200,
             }}
           >
             <Scene windStrength={windStrength} weather={weather} dayNight={dayNight} />
