@@ -12,6 +12,16 @@ const GRAVITY     = -0.006    // a touch heavier so the cloth hangs with real sa
 const DAMPING     = 0.984    // air resistance — settles rather than sways forever
 const ITERATIONS  = 16       // more constraint passes → stiffer, less stretchy fabric
 
+// ── Wind-tunnel / suspended mode ────────────────────────────────────────────
+// When `suspended` is true the garment is no longer pinned at the top edge —
+// instead every particle is softly tethered to a slowly bobbing / yawing rest
+// pose and gravity is nearly cancelled, so the piece levitates in mid-air and
+// billows in the fan's airflow (a wind-tunnel effect) rather than hanging.
+const SUSPEND_SPRING = 0.034   // soft tether to the floating rest pose
+const SUSPEND_GRAV   = 0.35    // fraction of gravity that still applies (slight droop)
+const SUSPEND_WIND_X = 0.10    // steady down-wind push is muted so it stays centred
+const SUSPEND_FLUTTER = 2.6    // …but the oscillatory billow is exaggerated
+
 export interface ClothPhysicsHandle {
   positions: Float32Array
   initCloth: () => void
@@ -33,6 +43,8 @@ export interface UpdateParams {
   time: number
   /** Low quality reduces iterations and skips expensive weather effects. */
   quality?: 'high' | 'low'
+  /** Wind-tunnel mode — garment floats in mid-air instead of hanging pinned. */
+  suspended?: boolean
 }
 
 export function useClothPhysics(): ClothPhysicsHandle {
@@ -41,6 +53,8 @@ export function useClothPhysics(): ClothPhysicsHandle {
   const prev = useRef(new Float32Array(N * 3))
   const acc  = useRef(new Float32Array(N * 3))
   const pin  = useRef(new Uint8Array(N))
+  const rest = useRef(new Float32Array(N * 3))   // floating rest pose (suspended mode)
+  const suspendedRef = useRef(false)
 
   // Constraint arrays
   const cP1  = useRef(new Int32Array(0))
@@ -53,6 +67,7 @@ export function useClothPhysics(): ClothPhysicsHandle {
     const p   = pos.current
     const pp  = prev.current
     const pn  = pin.current
+    const rp  = rest.current
 
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLS; col++) {
@@ -62,7 +77,8 @@ export function useClothPhysics(): ClothPhysicsHandle {
         const z  = 0
         p[i*3]     = x;  p[i*3+1]   = y;  p[i*3+2]   = z
         pp[i*3]    = x;  pp[i*3+1]  = y;  pp[i*3+2]  = z
-        pn[i] = row === 0 ? 1 : 0   // pin entire top row
+        rp[i*3]    = x;  rp[i*3+1]  = y;  rp[i*3+2]  = z   // rest pose = the flat grid
+        pn[i] = row === 0 ? 1 : 0   // pin entire top row (legacy hanging mode only)
       }
     }
 
@@ -103,13 +119,15 @@ export function useClothPhysics(): ClothPhysicsHandle {
     ready.current = true
   }, [])
 
-  // Precalculated squared distance impulse distribution
+  // Precalculated squared distance impulse distribution. Honours the suspended
+  // flag — in wind-tunnel mode there is no pinned edge, every particle reacts.
   const applyImpulse = useCallback((strength: number, centerX = 0, centerY = 0) => {
     const p = pos.current
     const pn = pin.current
     const a = acc.current
+    const suspended = suspendedRef.current
     for (let i = 0; i < N; i++) {
-      if (pn[i]) continue
+      if (!suspended && pn[i]) continue
       const ix = i * 3
       const dx = p[ix] - centerX
       const dy = p[ix + 1] - centerY
@@ -126,14 +144,17 @@ export function useClothPhysics(): ClothPhysicsHandle {
     if (!ready.current) return
 
     const { windStrength, weather, fanX, fanY, fanZ,
-            mouseX, mouseY, mouseZ, hasMousePos, isMouseDown, time, quality } = params
+            mouseX, mouseY, mouseZ, hasMousePos, isMouseDown, time, quality,
+            suspended = false } = params
 
+    suspendedRef.current = suspended
     const highQuality = quality !== 'low'
 
     const p   = pos.current
     const pp  = prev.current
     const a   = acc.current
     const pn  = pin.current
+    const rp  = rest.current
     const p1a = cP1.current
     const p2a = cP2.current
     const la  = cLen.current
@@ -154,15 +175,40 @@ export function useClothPhysics(): ClothPhysicsHandle {
                       : 0
     const damp = DAMPING * wetDrag
 
+    // ── Suspended (wind-tunnel) tether targets ────────────────────────────────
+    // The whole rest pose yaws and bobs slowly, so the garment hangs in space
+    // and turns lazily in the airflow. Computed once per frame, applied per
+    // particle below.
+    const sway = suspended ? Math.sin(time * 0.24) * 0.20 : 0   // gentle yaw (rad)
+    const cosS = Math.cos(sway)
+    const sinS = Math.sin(sway)
+    const bobX = suspended ? Math.sin(time * 0.31) * 0.10 : 0
+    const bobY = suspended ? Math.sin(time * 0.41) * 0.13 + Math.sin(time * 0.17) * 0.05 : 0
+    const bobZ = suspended ? Math.sin(time * 0.27) * 0.09 : 0
+    const windX     = suspended ? SUSPEND_WIND_X : 1
+    const flutter   = suspended ? SUSPEND_FLUTTER : 1
+    const gravScale = suspended ? SUSPEND_GRAV : 1
+
     // ── Force accumulation ──────────────────────────────────────────────────
     for (let i = 0; i < N; i++) {
-      if (pn[i]) continue
+      if (!suspended && pn[i]) continue
       const ix = i*3, iy = ix+1, iz = ix+2
       const col = i % COLS
       const row = (i / COLS) | 0
 
-      // gravity (+ wet-weather sag)
-      a[iy] += GRAVITY * (1 + extraSag)
+      // gravity (+ wet-weather sag); nearly cancelled when suspended
+      a[iy] += GRAVITY * gravScale * (1 + extraSag)
+
+      // soft tether to the bobbing / yawing rest pose (suspended mode only)
+      if (suspended) {
+        const rx = rp[ix], ry = rp[iy], rz = rp[iz]
+        const tx = rx * cosS - rz * sinS + bobX
+        const tz = rx * sinS + rz * cosS + bobZ
+        const ty = ry + bobY
+        a[ix] += (tx - p[ix]) * SUSPEND_SPRING
+        a[iy] += (ty - p[iy]) * SUSPEND_SPRING
+        a[iz] += (tz - p[iz]) * SUSPEND_SPRING
+      }
 
       // wind from fan (inverse-square falloff + turbulence + slow gust envelope)
       if (windStrength > 0) {
@@ -178,16 +224,16 @@ export function useClothPhysics(): ClothPhysicsHandle {
         const turb = (Math.sin(time*4.1 + row*0.52) * Math.cos(time*3.3 + col*0.31)) * 0.35
         const wf   = w * (1 + turb) * fall
 
-        a[ix] += -wf                                                  // primary blow direction (-X)
-        a[iy] += Math.sin(time*2.0 + col*0.21) * w * 0.04             // vertical flutter
-        a[iz] += Math.sin(time*3.1 + row*0.41 + col*0.19) * w * 0.12  // depth wave
+        a[ix] += -wf * windX                                              // primary blow direction (-X)
+        a[iy] += Math.sin(time*2.0 + col*0.21) * w * 0.04 * flutter        // vertical flutter
+        a[iz] += Math.sin(time*3.1 + row*0.41 + col*0.19) * w * 0.12 * flutter  // depth billow
       }
 
       // ambient breeze when the weather itself is windy (independent of the fan)
       if (ambientWind > 0) {
         const gust2 = 0.65 + 0.35 * Math.sin(time * 0.7 + row * 0.12)
-        a[ix] += -ambientWind * gust2
-        a[iz] += Math.sin(time * 1.5 + col * 0.2) * ambientWind * 0.08
+        a[ix] += -ambientWind * gust2 * windX
+        a[iz] += Math.sin(time * 1.5 + col * 0.2) * ambientWind * 0.08 * flutter
       }
 
       // rain ripple / hail jolt (high quality only)
@@ -224,7 +270,7 @@ export function useClothPhysics(): ClothPhysicsHandle {
 
     // ── Verlet integration ──────────────────────────────────────────────────
     for (let i = 0; i < N; i++) {
-      if (pn[i]) continue
+      if (!suspended && pn[i]) continue
       const ix = i*3, iy = ix+1, iz = ix+2
 
       const vx = (p[ix] - pp[ix]) * damp
@@ -255,8 +301,10 @@ export function useClothPhysics(): ClothPhysicsHandle {
         const diff = (dist - la[j]) / dist * 0.5
         const cx = dx*diff, cy = dy*diff, cz = dz*diff
 
-        if (!pn[i1]) { p[x1] += cx;  p[y1] += cy;  p[z1] += cz }
-        if (!pn[i2]) { p[x2] -= cx;  p[y2] -= cy;  p[z2] -= cz }
+        const lock1 = !suspended && pn[i1]
+        const lock2 = !suspended && pn[i2]
+        if (!lock1) { p[x1] += cx;  p[y1] += cy;  p[z1] += cz }
+        if (!lock2) { p[x2] -= cx;  p[y2] -= cy;  p[z2] -= cz }
       }
     }
   }, [])

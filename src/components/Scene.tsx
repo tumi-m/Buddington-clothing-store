@@ -21,6 +21,8 @@ interface SceneProps {
   garmentImage: string
   /** Quality level for adaptive performance scaling. */
   quality?: 'high' | 'low'
+  /** Wind-tunnel mode — garment floats suspended in the fan's airflow. */
+  suspended?: boolean
 }
 
 
@@ -129,7 +131,7 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
   }
 }
 
-export function Scene({ windStrength, weather, dayNight, garmentImage, quality = 'high' }: SceneProps) {
+export function Scene({ windStrength, weather, dayNight, garmentImage, quality = 'high', suspended = true }: SceneProps) {
   const { gl } = useThree()
   const texture = useGarmentTexture(garmentImage)
   const env = useMemo(() => envFor(weather, dayNight), [weather, dayNight])
@@ -190,6 +192,7 @@ export function Scene({ windStrength, weather, dayNight, garmentImage, quality =
         fanPosition={FAN_POSITION}
         texture={texture}
         quality={quality}
+        suspended={suspended}
       />
 
       {/* ── Fan ─────────────────────────────────────────────────────────── */}

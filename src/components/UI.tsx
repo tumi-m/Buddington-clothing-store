@@ -32,8 +32,6 @@ export function UI({
 }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
 
-  const currentGarment = garments?.find(g => g.id === selectedGarment)
-
   const toggleFan = () => {
     const next = !fanOn
     setFanOn(next)
@@ -55,43 +53,9 @@ export function UI({
         </div>
       </div>
 
-      {/* ── Garment info + selector (top-left, below the wordmark) ─────── */}
-      {garments && selectedGarment && (
-        <div className="absolute top-24 left-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm px-4 py-3 w-[230px] max-h-[calc(100vh-12rem)] flex flex-col shadow-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs tracking-widest text-gold font-light uppercase">Garment</span>
-            <span className="text-[9px] tracking-wider text-gray-600 uppercase">A/W 41</span>
-          </div>
-          <div className="mb-3 pb-3 border-b border-white/10">
-            <p className="font-mono text-[0.6rem] tracking-[0.14em] text-gold">{currentGarment?.code}</p>
-            <p className="font-serif text-paper text-base leading-tight">{currentGarment?.name}</p>
-            <p className="font-mono text-gold text-[0.78rem] mt-0.5">{currentGarment?.price}</p>
-          </div>
-          <div className="overflow-y-auto pr-1 -mr-1 flex flex-col gap-1">
-            {onGarmentChange && garments.map(g => {
-              const active = g.id === selectedGarment
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => onGarmentChange(g.id)}
-                  className={`text-left px-2 py-1.5 rounded transition-all duration-200 border ${
-                    active
-                      ? 'border-gold bg-gold/10 text-paper'
-                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                  }`}
-                >
-                  <div className="font-mono text-[0.6rem] tracking-[0.14em] text-gold leading-tight">
-                    {g.code}
-                  </div>
-                  <div className="font-mono text-[0.72rem] tracking-wide leading-tight">
-                    {g.name}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Garment metadata is intentionally omitted here — the wind-tunnel view
+          shows only the suspended render (reference: yeezy.com). Selection is
+          driven by the image-only carousel below. */}
 
       {/* ── Controls panel (bottom-right) ────────────────────────────────── */}
       <div className="absolute bottom-6 right-6 flex flex-col gap-3 items-end">
@@ -177,13 +141,6 @@ export function UI({
           </div>
         </div>
 
-        {/* Interaction hint */}
-        <div className="text-xs text-gray-700 tracking-wider text-right">
-          <span className="text-gray-600">drag</span> to orbit ·{' '}
-          <span className="text-gray-600">hover</span> cloth for ripples ·{' '}
-          <span className="text-gray-600">click</span> to push
-        </div>
-
         {/* Info toggle */}
         <button
           onClick={onInfoToggle}
@@ -227,12 +184,6 @@ export function UI({
         </button>
       </div>
 
-      {/* ── Bottom-left credits ──────────────────────────────────────────── */}
-      <div className="absolute bottom-6 left-6 text-xs text-gray-800 tracking-wider pointer-events-none">
-        <span className="text-gray-700">Three.js + React Three Fiber</span>
-        <br />
-        <span>Cloth simulation · Verlet integration</span>
-      </div>
     </>
   )
 }

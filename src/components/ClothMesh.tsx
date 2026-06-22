@@ -10,9 +10,11 @@ interface ClothMeshProps {
   fanPosition: THREE.Vector3
   texture: THREE.Texture | null
   quality?: 'high' | 'low'
+  /** Wind-tunnel mode — the garment floats in mid-air instead of hanging pinned. */
+  suspended?: boolean
 }
 
-export function ClothMesh({ windStrength, weather, fanPosition, texture, quality = 'high' }: ClothMeshProps) {
+export function ClothMesh({ windStrength, weather, fanPosition, texture, quality = 'high', suspended = false }: ClothMeshProps) {
   const { camera } = useThree()
   const { positions, initCloth, update, applyImpulse } = useClothPhysics()
 
@@ -138,6 +140,7 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture, quality
       isMouseDown: isDownRef.current,
       time: timeRef.current,
       quality,
+      suspended,
     })
 
     // Write cloth particle positions directly into geometry buffer
@@ -166,7 +169,7 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture, quality
     <>
       <mesh geometry={geometry} material={material} receiveShadow castShadow />
 
-      {weather === 'snow' && quality !== 'low' && <SnowAccumulation positions={positions} />}
+      {weather === 'snow' && quality !== 'low' && !suspended && <SnowAccumulation positions={positions} />}
 
       {/* Interaction cursor — drawn on top, ignores depth so it always reads */}
       <group ref={cursorRef} visible={false} renderOrder={999}>
