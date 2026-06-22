@@ -131,9 +131,9 @@ export default function App() {
         {/* Exit back to the editorial site — overlay, does not alter UI.tsx */}
         <button
           onClick={exitExperience}
-          className="absolute top-6 left-1/2 -translate-x-1/2 z-50 font-mono uppercase text-[0.65rem] tracking-[0.14em] text-gray-500 hover:text-gold border border-white/10 hover:border-gold px-3 py-1.5 rounded transition-colors focus-visible:outline-gold"
+          className="absolute bottom-3 left-3 sm:bottom-auto sm:top-6 sm:left-1/2 sm:-translate-x-1/2 z-50 font-mono uppercase text-[0.6rem] sm:text-[0.65rem] tracking-[0.14em] text-gray-400 hover:text-gold border border-white/10 hover:border-gold px-3 py-1.5 rounded bg-black/40 backdrop-blur-md transition-colors focus-visible:outline-gold"
         >
-          ← EXIT TO SITE
+          ← EXIT<span className="hidden sm:inline"> TO SITE</span>
         </button>
 
         <CartDrawer />

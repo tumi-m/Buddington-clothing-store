@@ -26,6 +26,11 @@ body {
 ::-webkit-scrollbar-track { background: #f4f1ea; }
 ::-webkit-scrollbar-thumb { background: #c9a44c; border-radius: 2px; }
 
+/* Hide scrollbars on swipeable strips (garment carousel, mobile nav) while
+   keeping them scrollable. */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Editorial reveal motion — restrained, house grammar */
 @keyframes buddington-reveal {
   from { opacity: 0; transform: translateY(12px); }
