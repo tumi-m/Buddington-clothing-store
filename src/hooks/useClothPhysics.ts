@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react'
+import type { Weather } from '../types'
 
 // Cloth grid dimensions — 30×20 gives 600 particles (good perf/quality balance)
 export const COLS = 30
@@ -7,9 +8,9 @@ export const CLOTH_W = 4.0  // world-space width
 export const CLOTH_H = 3.0  // world-space height
 const N = COLS * ROWS
 
-const GRAVITY     = -0.0055
-const DAMPING     = 0.987   // slightly silkier settle (less perpetual sway)
-const ITERATIONS  = 10      // more constraint passes → less stretchy, more fabric-like
+const GRAVITY     = -0.006    // a touch heavier so the cloth hangs with real sag
+const DAMPING     = 0.984    // air resistance — settles rather than sways forever
+const ITERATIONS  = 16       // more constraint passes → stiffer, less stretchy fabric
 
 export interface ClothPhysicsHandle {
   positions: Float32Array
@@ -19,6 +20,7 @@ export interface ClothPhysicsHandle {
 
 export interface UpdateParams {
   windStrength: number
+  weather: Weather
   fanX: number
   fanY: number
   fanZ: number
@@ -101,7 +103,7 @@ export function useClothPhysics(): ClothPhysicsHandle {
   const update = useCallback((params: UpdateParams) => {
     if (!ready.current) return
 
-    const { windStrength, fanX, fanY, fanZ,
+    const { windStrength, weather, fanX, fanY, fanZ,
             mouseX, mouseY, mouseZ, hasMousePos, isMouseDown, time } = params
 
     const p   = pos.current
@@ -113,6 +115,21 @@ export function useClothPhysics(): ClothPhysicsHandle {
     const la  = cLen.current
     const nc  = cNum.current
 
+    // ── Weather → cloth behaviour ─────────────────────────────────────────────
+    // WINDY adds an ambient breeze even with the fan off; RAIN/HAIL/SNOW make the
+    // fabric wet & heavy (extra downward sag + more drag, so it flutters less and
+    // recovers slowly). SUNNY is the baseline.
+    const ambientWind = weather === 'windy' ? 0.30 : 0
+    const wetDrag     = weather === 'rain' ? 0.965
+                      : weather === 'hail' ? 0.960
+                      : weather === 'snow' ? 0.974
+                      : 1
+    const extraSag     = weather === 'rain' ? 0.45
+                      : weather === 'hail' ? 0.35
+                      : weather === 'snow' ? 0.25
+                      : 0
+    const damp = DAMPING * wetDrag
+
     // ── Force accumulation ──────────────────────────────────────────────────
     for (let i = 0; i < N; i++) {
       if (pn[i]) continue
@@ -120,8 +137,8 @@ export function useClothPhysics(): ClothPhysicsHandle {
       const col = i % COLS
       const row = (i / COLS) | 0
 
-      // gravity
-      a[iy] += GRAVITY
+      // gravity (+ wet-weather sag)
+      a[iy] += GRAVITY * (1 + extraSag)
 
       // wind from fan (inverse-square falloff + turbulence + slow gust envelope)
       if (windStrength > 0) {
@@ -140,6 +157,13 @@ export function useClothPhysics(): ClothPhysicsHandle {
         a[ix] += -wf                                                  // primary blow direction (-X)
         a[iy] += Math.sin(time*2.0 + col*0.21) * w * 0.04             // vertical flutter
         a[iz] += Math.sin(time*3.1 + row*0.41 + col*0.19) * w * 0.12  // depth wave
+      }
+
+      // ambient breeze when the weather itself is windy (independent of the fan)
+      if (ambientWind > 0) {
+        const gust2 = 0.65 + 0.35 * Math.sin(time * 0.7 + row * 0.12)
+        a[ix] += -ambientWind * gust2
+        a[iz] += Math.sin(time * 1.5 + col * 0.2) * ambientWind * 0.08
       }
 
       // mouse repulsion / attraction (poke on click)
@@ -163,9 +187,9 @@ export function useClothPhysics(): ClothPhysicsHandle {
       if (pn[i]) continue
       const ix = i*3, iy = ix+1, iz = ix+2
 
-      const vx = (p[ix] - pp[ix]) * DAMPING
-      const vy = (p[iy] - pp[iy]) * DAMPING
-      const vz = (p[iz] - pp[iz]) * DAMPING
+      const vx = (p[ix] - pp[ix]) * damp
+      const vy = (p[iy] - pp[iy]) * damp
+      const vz = (p[iz] - pp[iz]) * damp
 
       pp[ix] = p[ix];  pp[iy] = p[iy];  pp[iz] = p[iz]
       p[ix] += vx + a[ix]

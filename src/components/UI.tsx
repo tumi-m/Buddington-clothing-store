@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { View, Weather, DayNight } from '../types'
+import type { Garment } from '../data/garments'
 
 interface UIProps {
   windStrength: number
@@ -13,11 +14,16 @@ interface UIProps {
   onWeatherChange?: (w: Weather) => void
   dayNight?: DayNight
   onDayNightToggle?: () => void
+  /** Optional garment selector — which piece of clothing is on the cloth. */
+  garments?: Garment[]
+  selectedGarment?: string
+  onGarmentChange?: (id: string) => void
 }
 
 export function UI({
   windStrength, onWindChange, onInfoToggle, showInfo,
   onNavigate, weather, onWeatherChange, dayNight, onDayNightToggle,
+  garments, selectedGarment, onGarmentChange,
 }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
 
@@ -41,6 +47,39 @@ export function UI({
           A/W 41 COLLECTION
         </div>
       </div>
+
+      {/* ── Garment selector (top-left, below the wordmark) ───────────────── */}
+      {garments && onGarmentChange && selectedGarment && (
+        <div className="absolute top-24 left-6 bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 w-[230px] max-h-[calc(100vh-12rem)] flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Garment</span>
+            <span className="text-[9px] tracking-wider text-gray-600 uppercase">A/W 41</span>
+          </div>
+          <div className="overflow-y-auto pr-1 -mr-1 flex flex-col gap-1">
+            {garments.map(g => {
+              const active = g.id === selectedGarment
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => onGarmentChange(g.id)}
+                  className={`text-left px-2 py-1.5 rounded transition-all duration-200 border ${
+                    active
+                      ? 'border-gold bg-gold/10 text-paper'
+                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="font-mono text-[0.6rem] tracking-[0.14em] text-gold leading-tight">
+                    {g.code}
+                  </div>
+                  <div className="font-mono text-[0.72rem] tracking-wide leading-tight">
+                    {g.name}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Controls panel (bottom-right) ────────────────────────────────── */}
       <div className="absolute bottom-6 right-6 flex flex-col gap-3 items-end">

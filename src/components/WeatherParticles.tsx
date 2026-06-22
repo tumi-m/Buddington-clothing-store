@@ -27,7 +27,7 @@ const CFG: Record<Weather, Cfg> = {
   sunny: { count: 0,   color: '#ffffff', size: 0,    fall: 0,    sway: 0,    opacity: 0 },
   windy: { count: 0,   color: '#ffffff', size: 0,    fall: 0,    sway: 0,    opacity: 0 },
   rain:  { count: 1500, color: '#a6c6ee', size: 0.025, fall: 15,  sway: 0.02, opacity: 0.7 },
-  snow:  { count: 800,  color: '#ffffff', size: 0.05,  fall: 2.8, sway: 0.18, opacity: 0.9 },
+  snow:  { count: 800,  color: '#dfe6ee', size: 0.035, fall: 2.8, sway: 0.18, opacity: 0.6 },
   hail:  { count: 500,  color: '#d4dce3', size: 0.06,  fall: 23,  sway: 0.03, opacity: 0.95 },
 }
 

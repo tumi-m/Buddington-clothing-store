@@ -2,14 +2,16 @@ import { useRef, useEffect, useMemo, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useClothPhysics, COLS, ROWS, CLOTH_W, CLOTH_H } from '../hooks/useClothPhysics'
+import type { Weather } from '../types'
 
 interface ClothMeshProps {
   windStrength: number
+  weather: Weather
   fanPosition: THREE.Vector3
   texture: THREE.Texture | null
 }
 
-export function ClothMesh({ windStrength, fanPosition, texture }: ClothMeshProps) {
+export function ClothMesh({ windStrength, weather, fanPosition, texture }: ClothMeshProps) {
   const { camera } = useThree()
   const { positions, initCloth, update } = useClothPhysics()
 
@@ -91,6 +93,7 @@ export function ClothMesh({ windStrength, fanPosition, texture }: ClothMeshProps
 
     update({
       windStrength,
+      weather,
       fanX: fanPosition.x, fanY: fanPosition.y, fanZ: fanPosition.z,
       mouseX: x, mouseY: y, mouseZ: z,
       hasMousePos: valid,

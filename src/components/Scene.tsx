@@ -10,13 +10,15 @@ import { Fan } from './Fan'
 import { SkyDome } from './SkyDome'
 import { WeatherParticles } from './WeatherParticles'
 import { Nature } from './Nature'
-import { useSlideshowTexture } from '../hooks/useSlideshowTexture'
+import { useGarmentTexture } from '../hooks/useGarmentTexture'
 import type { Weather, DayNight } from '../types'
 
 interface SceneProps {
   windStrength: number
   weather: Weather
   dayNight: DayNight
+  /** Selected garment image path (which piece of clothing is on the cloth). */
+  garmentImage: string
 }
 
 const FAN_POSITION = new THREE.Vector3(2.8, 0, 0.4)
@@ -42,7 +44,7 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
     : weather === 'sunny' ? { top: '#1d6cf0', horizon: '#cfe9ff' }
     : weather === 'windy' ? { top: '#5b86b5', horizon: '#c4d4e0' }
     : weather === 'rain'  ? { top: '#58616f', horizon: '#9aa3ad' }
-    : weather === 'snow'  ? { top: '#aeb9c6', horizon: '#e6ecf2' }
+    : weather === 'snow'  ? { top: '#6b7682', horizon: '#9aa4ae' }   // muted grey-blue, not blown-out white
     :                       { top: '#414953', horizon: '#787f88' } // hail
 
   if (night) {
@@ -92,7 +94,24 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
     }
   }
 
-  // overcast day (rain / snow / hail)
+  if (weather === 'snow') {
+    // Muted overcast — kept deliberately below white so the snow doesn't blow
+    // out the scene. Lower key/exposure than sunny, flat soft light.
+    return {
+      sky,
+      ambient: 0.4,
+      key: { intensity: 0.85, color: '#cdd6df' },
+      rim: { intensity: 0.35, color: '#c9a44c' },
+      fill: { intensity: 0.4, color: '#9fb4d4' },
+      exposure: 0.95,
+      floor: '#b8bcc2',
+      gridCenter: '#878d95',
+      grid: '#b3b9bf',
+      shadowOpacity: 0.3,
+    }
+  }
+
+  // overcast day (rain / hail)
   return {
     sky,
     ambient: 0.42,
@@ -107,9 +126,9 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
   }
 }
 
-export function Scene({ windStrength, weather, dayNight }: SceneProps) {
+export function Scene({ windStrength, weather, dayNight, garmentImage }: SceneProps) {
   const { gl } = useThree()
-  const texture = useSlideshowTexture()
+  const texture = useGarmentTexture(garmentImage)
   const env = useMemo(() => envFor(weather, dayNight), [weather, dayNight])
 
   // Shadow-map quality + tone mapping exposure (re-applied when day/night changes)
@@ -164,6 +183,7 @@ export function Scene({ windStrength, weather, dayNight }: SceneProps) {
       {/* ── Cloth ───────────────────────────────────────────────────────── */}
       <ClothMesh
         windStrength={windStrength}
+        weather={weather}
         fanPosition={FAN_POSITION}
         texture={texture}
       />

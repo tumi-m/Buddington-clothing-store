@@ -9,6 +9,7 @@
 // tint adapts to the weather + day-night toggle.
 
 import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Weather, DayNight } from '../types'
 
@@ -51,6 +52,8 @@ export function Nature({ weather, dayNight }: NatureProps) {
       <Bushes />
       <Rocks />
       <Pond position={[-7, GROUND_Y, -3.5]} />
+      <Cattails center={[-7, -3.5]} />
+      <Butterflies />
       <Hippo position={[-5.2, GROUND_Y, -2.4]} rotation={-0.3} />
       <Hippo position={[-8.4, GROUND_Y, -5.2]} rotation={0.7} scale={0.82} />
       <Cow position={[6.5, GROUND_Y, -2.5]} rotation={-0.5} />
@@ -62,7 +65,7 @@ export function Nature({ weather, dayNight }: NatureProps) {
 // ── Grass blades (instanced for density) ──────────────────────────────────────
 function GrassField({ base }: { base: string }) {
   const ref = useRef<THREE.InstancedMesh>(null)
-  const COUNT = 500
+  const COUNT = 700
   const dummy = useMemo(() => new THREE.Object3D(), [])
   const blades = useMemo(() => {
     return Array.from({ length: COUNT }, () => {
@@ -101,7 +104,7 @@ function GrassField({ base }: { base: string }) {
 const DAISY_COLORS = ['#ffffff', '#f4f1ea', '#f0ead6']
 
 function Daisies() {
-  const items = useMemo(() => Array.from({ length: 45 }, () => {
+  const items = useMemo(() => Array.from({ length: 55 }, () => {
     const a = Math.random() * Math.PI * 2
     const r = rand(3, 24)
     return { x: Math.cos(a) * r, z: Math.sin(a) * r, s: rand(0.7, 1.2), c: pick(DAISY_COLORS) }
@@ -132,7 +135,7 @@ function Daisies() {
 const FLOWER_COLORS = ['#d96a8e', '#e08a3c', '#8a6ad9', '#d93b3b', '#e8c14e', '#5e9ad9']
 
 function Flowers() {
-  const items = useMemo(() => Array.from({ length: 32 }, () => {
+  const items = useMemo(() => Array.from({ length: 42 }, () => {
     const a = Math.random() * Math.PI * 2
     const r = rand(3.5, 25)
     return { x: Math.cos(a) * r, z: Math.sin(a) * r, s: rand(0.7, 1.3), c: pick(FLOWER_COLORS) }
@@ -279,6 +282,102 @@ function Pond({ position }: { position: [number, number, number] }) {
         </group>
       ))}
     </group>
+  )
+}
+
+// ── Cattails / reeds at the pond edge ──────────────────────────────────────────
+function Cattails({ center }: { center: [number, number] }) {
+  const items = useMemo(() => {
+    const arr: { x: number; z: number; h: number; tilt: number }[] = []
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2 + rand(-0.2, 0.2)
+      const r = rand(3.7, 4.4)
+      arr.push({ x: center[0] + Math.cos(a) * r, z: center[1] + Math.sin(a) * r, h: rand(1.0, 1.5), tilt: rand(-0.12, 0.12) })
+    }
+    return arr
+  }, [center])
+  return (
+    <>
+      {items.map((c, i) => (
+        <group key={i} position={[c.x, GROUND_Y, c.z]} rotation={[0, 0, c.tilt]}>
+          {/* green stem */}
+          <mesh position={[0, c.h / 2, 0]} castShadow>
+            <cylinderGeometry args={[0.03, 0.04, c.h, 6]} />
+            <meshStandardMaterial color="#3d6b2f" roughness={1} />
+          </mesh>
+          {/* brown cattail head */}
+          <mesh position={[0, c.h + 0.18, 0]} castShadow>
+            <cylinderGeometry args={[0.045, 0.05, 0.34, 8]} />
+            <meshStandardMaterial color="#5a3a1a" roughness={0.95} />
+          </mesh>
+        </group>
+      ))}
+    </>
+  )
+}
+
+// ── Butterflies (animated, drifting over the meadow) ──────────────────────────
+const WING_COLORS = ['#d96a8e', '#e8c14e', '#5e9ad9', '#e08a3c', '#b48ad9']
+
+function Butterflies() {
+  const groupRefs = useRef<(THREE.Group | null)[]>([])
+  const wingLRefs = useRef<(THREE.Mesh | null)[]>([])
+  const wingRRefs = useRef<(THREE.Mesh | null)[]>([])
+  const timeRef = useRef(0)
+  const COUNT = 6
+  const data = useMemo(() => Array.from({ length: COUNT }, (_, i) => ({
+    cx: rand(-9, 9),
+    cz: rand(-9, 9),
+    cy: rand(0.9, 1.9),
+    ax: rand(2.2, 4.0),     // lissajous radii
+    az: rand(2.2, 4.0),
+    speed: rand(0.25, 0.5),
+    phase: rand(0, Math.PI * 2),
+    flap: rand(9, 13),
+    color: WING_COLORS[i % WING_COLORS.length],
+  })), [])
+
+  useFrame((_, delta) => {
+    timeRef.current += Math.min(delta, 0.05)
+    const t = timeRef.current
+    data.forEach((d, i) => {
+      const g = groupRefs.current[i]
+      if (g) {
+        g.position.set(
+          d.cx + Math.sin(t * d.speed + d.phase) * d.ax,
+          d.cy + Math.sin(t * d.speed * 1.7 + d.phase) * 0.4,
+          d.cz + Math.cos(t * d.speed * 0.8 + d.phase) * d.az,
+        )
+        g.rotation.y = Math.atan2(Math.cos(t * d.speed + d.phase), -Math.sin(t * d.speed * 0.8 + d.phase))
+      }
+      const flap = Math.sin(t * d.flap) * 0.7
+      if (wingLRefs.current[i]) wingLRefs.current[i]!.rotation.y = flap
+      if (wingRRefs.current[i]) wingRRefs.current[i]!.rotation.y = -flap
+    })
+  })
+
+  return (
+    <>
+      {data.map((d, i) => (
+        <group key={i} ref={el => { groupRefs.current[i] = el }}>
+          {/* body */}
+          <mesh>
+            <cylinderGeometry args={[0.015, 0.015, 0.12, 6]} />
+            <meshStandardMaterial color="#15150f" />
+          </mesh>
+          {/* left wing */}
+          <mesh ref={el => { wingLRefs.current[i] = el }} position={[0.07, 0.02, 0]} rotation={[0, 0, 0.2]}>
+            <sphereGeometry args={[0.07, 8, 6]} />
+            <meshStandardMaterial color={d.color} side={THREE.DoubleSide} transparent opacity={0.92} />
+          </mesh>
+          {/* right wing */}
+          <mesh ref={el => { wingRRefs.current[i] = el }} position={[-0.07, 0.02, 0]} rotation={[0, 0, -0.2]}>
+            <sphereGeometry args={[0.07, 8, 6]} />
+            <meshStandardMaterial color={d.color} side={THREE.DoubleSide} transparent opacity={0.92} />
+          </mesh>
+        </group>
+      ))}
+    </>
   )
 }
 

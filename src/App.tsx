@@ -15,6 +15,7 @@ import { Shop } from './components/Shop'
 import { ProductDetail } from './components/ProductDetail'
 import { GhostCapsule } from './components/GhostCapsule'
 import { getProductById } from './data/products'
+import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
 
 function Loader() {
@@ -42,6 +43,7 @@ export default function App() {
   const [showInfo, setShowInfo] = useState(false)
   const [weather, setWeather] = useState<Weather>('sunny')
   const [dayNight, setDayNight] = useState<DayNight>('day')
+  const [selectedGarment, setSelectedGarment] = useState<string>(GARMENTS[0].id)
 
   const toggleDayNight = useCallback(() => {
     setDayNight(d => (d === 'day' ? 'night' : 'day'))
@@ -83,7 +85,12 @@ export default function App() {
               far:      200,
             }}
           >
-            <Scene windStrength={windStrength} weather={weather} dayNight={dayNight} />
+            <Scene
+              windStrength={windStrength}
+              weather={weather}
+              dayNight={dayNight}
+              garmentImage={GARMENTS.find(g => g.id === selectedGarment)?.image ?? GARMENTS[0].image}
+            />
           </Canvas>
         </Suspense>
 
@@ -97,6 +104,9 @@ export default function App() {
           onWeatherChange={setWeather}
           dayNight={dayNight}
           onDayNightToggle={toggleDayNight}
+          garments={GARMENTS}
+          selectedGarment={selectedGarment}
+          onGarmentChange={setSelectedGarment}
         />
 
         {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
