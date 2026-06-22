@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { View, Weather, DayNight } from '../types'
 import type { Garment } from '../data/garments'
-import { GarmentCarousel } from './GarmentCarousel'
+import { useCart } from '../cart/CartContext'
 
 interface UIProps {
   windStrength: number
@@ -18,7 +18,7 @@ interface UIProps {
   /** Optional quality toggle for adaptive performance scaling. */
   quality?: 'high' | 'low'
   onQualityChange?: (q: 'high' | 'low') => void
-  /** Optional garment selector — which piece of clothing is on the cloth. */
+  /** Optional garment selector — which piece of clothing is suspended. */
   garments?: Garment[]
   selectedGarment?: string
   onGarmentChange?: (id: string) => void
@@ -31,11 +31,29 @@ export function UI({
   garments, selectedGarment, onGarmentChange,
 }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
+  const { count, open, addItem } = useCart()
 
   const toggleFan = () => {
     const next = !fanOn
     setFanOn(next)
     onWindChange(next ? 0.5 : 0)
+  }
+
+  // ── Garment navigation (GTA weapon-wheel style: step left / right) ──────────
+  const index = garments?.findIndex(g => g.id === selectedGarment) ?? -1
+  const current = index >= 0 ? garments![index] : undefined
+  const step = (dir: -1 | 1) => {
+    if (!garments || !onGarmentChange || garments.length === 0) return
+    const base = index < 0 ? 0 : index
+    const next = (base + dir + garments.length) % garments.length
+    onGarmentChange(garments[next].id)
+  }
+  const addCurrent = () => {
+    if (!current) return
+    addItem({
+      id: current.id, code: current.code, name: current.name,
+      price: current.priceValue, currency: current.currency, image: current.image,
+    })
   }
 
   return (
@@ -49,20 +67,68 @@ export function UI({
           BUDDINGTON
         </div>
         <div className="text-xs tracking-widest text-gray-600 mt-1 font-light">
-          A/W 41 COLLECTION
+          A/W 41 · IN THE ELEMENTS
         </div>
       </div>
 
-      {/* Garment metadata is intentionally omitted here — the wind-tunnel view
-          shows only the suspended render (reference: yeezy.com). Selection is
-          driven by the image-only carousel below. */}
+      {/* ── GTA-style garment toggles (one on each side) ──────────────────── */}
+      {garments && garments.length > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Previous garment"
+            onClick={() => step(-1)}
+            className="group absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-16 flex items-center justify-center text-paper/45 hover:text-gold transition-colors focus-visible:outline-gold"
+          >
+            <span className="text-4xl font-thin leading-none group-active:-translate-x-1 transition-transform">❮</span>
+          </button>
+          <button
+            type="button"
+            aria-label="Next garment"
+            onClick={() => step(1)}
+            className="group absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-16 flex items-center justify-center text-paper/45 hover:text-gold transition-colors focus-visible:outline-gold"
+          >
+            <span className="text-4xl font-thin leading-none group-active:translate-x-1 transition-transform">❯</span>
+          </button>
+        </>
+      )}
+
+      {/* ── Minimal product block (bottom-centre, yeezy.com grammar) ──────── */}
+      {garments && current && (
+        <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2.5 select-none">
+          {/* Dot index */}
+          <div className="flex items-center gap-1.5">
+            {garments.map(g => (
+              <button
+                key={g.id}
+                type="button"
+                aria-label={`Select ${g.code}`}
+                onClick={() => onGarmentChange?.(g.id)}
+                className={`h-1.5 rounded-full transition-all duration-300 focus-visible:outline-gold ${
+                  g.id === current.id ? 'w-4 bg-gold' : 'w-1.5 bg-paper/30 hover:bg-paper/60'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="font-mono uppercase text-[0.72rem] tracking-[0.2em] text-paper">{current.code}</p>
+          <p className="font-mono text-gold text-[0.8rem]">{current.price}</p>
+          <button
+            type="button"
+            onClick={addCurrent}
+            aria-label={`Add ${current.code} to bag`}
+            className="mt-0.5 w-9 h-9 flex items-center justify-center text-2xl font-thin leading-none text-paper border border-paper/30 rounded-full hover:bg-paper hover:text-black transition-colors focus-visible:outline-gold"
+          >
+            +
+          </button>
+        </div>
+      )}
 
       {/* ── Controls panel (bottom-right) ────────────────────────────────── */}
       <div className="absolute bottom-6 right-6 flex flex-col gap-3 items-end">
 
         {/* Quality toggle */}
         {onQualityChange && quality && (
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded px-4 py-2">
+          <div className="bg-black/55 backdrop-blur-md border border-white/10 rounded px-4 py-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] tracking-widest text-gray-400 font-light uppercase">Quality</span>
               <button
@@ -77,7 +143,7 @@ export function UI({
 
         {/* Weather selector + day/night */}
         {onWeatherChange && weather && (
-          <div className="bg-black/60 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[210px]">
+          <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[210px]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Weather</span>
               {onDayNightToggle && dayNight && (
@@ -108,9 +174,9 @@ export function UI({
         )}
 
         {/* Wind control */}
-        <div className="bg-black/60 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[200px]">
+        <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[200px]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Wind</span>
+            <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Fan</span>
             <button
               onClick={toggleFan}
               className={`text-xs tracking-wider px-2 py-0.5 border rounded transition-all duration-200 ${
@@ -150,21 +216,11 @@ export function UI({
         </button>
       </div>
 
-      {/* ── Garment carousel (bottom filmstrip) ───────────────────────────── */}
-      {garments && onGarmentChange && (
-        <GarmentCarousel
-          garments={garments}
-          selectedGarment={selectedGarment ?? garments[0]?.id ?? ''}
-          onGarmentChange={onGarmentChange}
-        />
-      )}
-
-      {/* ── Top-right nav ────────────────────────────────────────────────── */}
-      <div className="absolute top-6 right-6 flex gap-6 items-center">
+      {/* ── Top-right nav + bag ──────────────────────────────────────────── */}
+      <div className="absolute top-6 right-6 flex gap-5 sm:gap-6 items-center">
         {([
           { label: 'COLLECTION', view: 'shop' as View },
           { label: 'LOOKBOOK',    view: 'ghost' as View },
-          { label: 'STORES',      view: 'home' as View },
         ]).map(item => (
           <button
             key={item.label}
@@ -176,14 +232,12 @@ export function UI({
           </button>
         ))}
         <button
-          onClick={() => onNavigate?.('shop')}
-          disabled={!onNavigate}
-          className="text-xs tracking-widest border border-gold text-gold px-4 py-1.5 hover:bg-gold hover:text-black transition-all duration-200 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-gold"
+          onClick={open}
+          className="text-xs tracking-widest border border-gold text-gold px-4 py-1.5 hover:bg-gold hover:text-black transition-all duration-200"
         >
-          SHOP
+          BAG{count > 0 ? ` · ${count}` : ''}
         </button>
       </div>
-
     </>
   )
 }

@@ -2,6 +2,7 @@
 // Global top navigation for the editorial shell. View-state switcher (no router).
 
 import type { View } from '../types'
+import { useCart } from '../cart/CartContext'
 
 interface NavItem {
   key: View
@@ -21,6 +22,7 @@ export interface NavProps {
 }
 
 export function Nav({ view, onNavigate }: NavProps) {
+  const { count, open } = useCart()
   return (
     <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-sm border-b border-hair">
       <div className="mx-auto max-w-[1600px] px-6 lg:px-12 h-16 flex items-center justify-between">
@@ -54,6 +56,15 @@ export function Nav({ view, onNavigate }: NavProps) {
               </button>
             )
           })}
+
+          {/* Bag */}
+          <button
+            onClick={open}
+            aria-label={`Open bag, ${count} item${count === 1 ? '' : 's'}`}
+            className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-ink hover:text-gold transition-colors border border-hair hover:border-gold px-3 py-1 rounded-sm"
+          >
+            BAG{count > 0 ? ` · ${count}` : ''}
+          </button>
         </nav>
       </div>
     </header>

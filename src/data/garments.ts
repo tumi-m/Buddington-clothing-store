@@ -14,15 +14,26 @@ export interface Garment {
   code: string
   /** Display price in the 3D experience overlay. */
   price: string
+  /** Numeric unit price + currency, for the bag / checkout. */
+  priceValue: number
+  currency: string
   /** Real photographic path under /public (image policy Tier 3). */
   image: string
 }
 
 export const GARMENTS: Garment[] = [
-  ...PRODUCTS.map(p => ({ id: p.id, name: p.name, code: p.code, price: `${p.currency} ${p.price.toLocaleString('en-GB')}`, image: p.image! })),
-  { id: 'ghost-01', name: 'Spectre Shell',  code: 'GHOST-01', price: '£ 720', image: '/images/IMG_5678.PNG' },
-  { id: 'ghost-02', name: 'Phantom Hood',   code: 'GHOST-02', price: '£ 540', image: '/images/IMG_5888.PNG' },
-  { id: 'ghost-03', name: 'Wraith Trouser', code: 'GHOST-03', price: '£ 430', image: '/images/IMG_5912.PNG' },
+  ...PRODUCTS.map(p => ({
+    id: p.id,
+    name: p.name,
+    code: p.code,
+    price: `${p.currency} ${p.price.toLocaleString('en-GB')}`,
+    priceValue: p.price,
+    currency: p.currency,
+    image: p.image!,
+  })),
+  { id: 'ghost-01', name: 'Spectre Shell',  code: 'GHOST-01', price: '£ 720', priceValue: 720, currency: '£', image: '/images/IMG_5678.PNG' },
+  { id: 'ghost-02', name: 'Phantom Hood',   code: 'GHOST-02', price: '£ 540', priceValue: 540, currency: '£', image: '/images/IMG_5888.PNG' },
+  { id: 'ghost-03', name: 'Wraith Trouser', code: 'GHOST-03', price: '£ 430', priceValue: 430, currency: '£', image: '/images/IMG_5912.PNG' },
 ]
 
 export function getGarmentById(id: string): Garment | undefined {

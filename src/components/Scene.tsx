@@ -49,7 +49,7 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
     : weather === 'sunny' ? { top: '#1d6cf0', horizon: '#cfe9ff' }
     : weather === 'windy' ? { top: '#5b86b5', horizon: '#c4d4e0' }
     : weather === 'rain'  ? { top: '#58616f', horizon: '#9aa3ad' }
-    : weather === 'snow'  ? { top: '#6b7682', horizon: '#9aa4ae' }   // muted grey-blue, not blown-out white
+    : weather === 'snow'  ? { top: '#454d57', horizon: '#6e7782' }   // deeper grey-blue for contrast against the snow
     :                       { top: '#414953', horizon: '#787f88' } // hail
 
   if (night) {
@@ -100,19 +100,20 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
   }
 
   if (weather === 'snow') {
-    // Muted overcast — kept deliberately below white so the snow doesn't blow
-    // out the scene. Lower key/exposure than sunny, flat soft light.
+    // Overcast snow — deliberately darker than the falling snow so the flakes
+    // and garment read with contrast instead of washing the frame to white.
+    // Lower exposure + ambient, deeper ground, firmer key for separation.
     return {
       sky,
-      ambient: 0.4,
-      key: { intensity: 0.85, color: '#cdd6df' },
-      rim: { intensity: 0.35, color: '#c9a44c' },
-      fill: { intensity: 0.4, color: '#9fb4d4' },
-      exposure: 0.95,
-      floor: '#b8bcc2',
-      gridCenter: '#878d95',
-      grid: '#b3b9bf',
-      shadowOpacity: 0.3,
+      ambient: 0.3,
+      key: { intensity: 1.05, color: '#cfd8e2' },
+      rim: { intensity: 0.4, color: '#c9a44c' },
+      fill: { intensity: 0.34, color: '#8aa0c0' },
+      exposure: 0.8,
+      floor: '#969ca4',
+      gridCenter: '#6c727a',
+      grid: '#8f959d',
+      shadowOpacity: 0.42,
     }
   }
 
@@ -232,9 +233,9 @@ export function Scene({ windStrength, weather, dayNight, garmentImage, quality =
       {/* ── Post-processing ──────────────────────────────────────────────── */}
       <EffectComposer>
         <Bloom
-          luminanceThreshold={0.3}
-          luminanceSmoothing={0.85}
-          intensity={0.5}
+          luminanceThreshold={0.55}
+          luminanceSmoothing={0.9}
+          intensity={0.32}
           blendFunction={BlendFunction.ADD}
         />
         <ChromaticAberration

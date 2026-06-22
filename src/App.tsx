@@ -14,6 +14,7 @@ import { Home } from './components/Home'
 import { Shop } from './components/Shop'
 import { ProductDetail } from './components/ProductDetail'
 import { GhostCapsule } from './components/GhostCapsule'
+import { CartDrawer } from './components/CartDrawer'
 import { getProductById } from './data/products'
 import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
@@ -134,6 +135,8 @@ export default function App() {
         >
           ← EXIT TO SITE
         </button>
+
+        <CartDrawer />
       </div>
     )
   }
@@ -155,6 +158,8 @@ export default function App() {
         )}
         {view === 'ghost' && <GhostCapsule />}
       </main>
+
+      <CartDrawer />
     </div>
   )
 }

@@ -67,48 +67,53 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture, quality
     }
   }, [handleMouseMove])
 
-  // Material — neutral dark base, weather-responsive wet/sheen/roughness
+  // Material — true-colour fabric so the cutout garment reads naturally (no
+  // house-dark tint, no rectangular box). Transparent + alphaTest renders only
+  // the baked cutout silhouette. Weather modulates wet/sheen/roughness.
   const material = useMemo(() => new THREE.MeshPhysicalMaterial({
     map:           null,
-    color:         new THREE.Color('#1a1a1a'),
-    metalness:     0.25,
-    roughness:     0.2,
-    sheen:         1.0,
-    sheenRoughness:0.25,
+    color:         new THREE.Color('#ffffff'),
+    metalness:     0.0,
+    roughness:     0.82,
+    sheen:         0.35,
+    sheenRoughness:0.5,
     sheenColor:    new THREE.Color('#c9a44c'),
     side:          THREE.DoubleSide,
-    envMapIntensity: 1.0,
+    transparent:   true,
+    alphaTest:     0.18,
+    envMapIntensity: 0.6,
   }), [])
 
   useEffect(() => () => material.dispose(), [material])
 
-  // Weather → material look
+  // Weather → material look (tints multiply the garment photo; kept subtle so
+  // the piece stays true-colour, just damp/sheened by the elements).
   useEffect(() => {
     switch (weather) {
       case 'rain':
-        material.roughness = 0.55
-        material.sheen = 0.4
-        material.color.set('#151515')
+        material.roughness = 0.45
+        material.sheen = 0.7
+        material.color.set('#d6d9dd')   // cool & damp
         break
       case 'snow':
-        material.roughness = 0.35
-        material.sheen = 0.85
-        material.color.set('#222222')
+        material.roughness = 0.7
+        material.sheen = 0.4
+        material.color.set('#eef0f2')
         break
       case 'hail':
-        material.roughness = 0.45
+        material.roughness = 0.5
         material.sheen = 0.5
-        material.color.set('#171717')
+        material.color.set('#dfe2e5')
         break
       case 'windy':
-        material.roughness = 0.22
-        material.sheen = 1.0
-        material.color.set('#1a1a1a')
+        material.roughness = 0.8
+        material.sheen = 0.35
+        material.color.set('#ffffff')
         break
       default: // sunny
-        material.roughness = 0.2
-        material.sheen = 1.0
-        material.color.set('#1a1a1a')
+        material.roughness = 0.82
+        material.sheen = 0.35
+        material.color.set('#ffffff')
     }
     material.needsUpdate = true
   }, [material, weather])
@@ -121,7 +126,7 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture, quality
       material.map = texture
       material.needsUpdate = true
       if (prevTextureRef.current !== texture) {
-        applyImpulse(0.09)
+        applyImpulse(0.16)   // visible "push" when toggling to a new garment
         prevTextureRef.current = texture
       }
     }
@@ -167,7 +172,10 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture, quality
 
   return (
     <>
-      <mesh geometry={geometry} material={material} receiveShadow castShadow />
+      {/* No shadow flags — a cast shadow would betray the rectangular cloth
+          plane behind the cutout. The soft ContactShadows blob reads as the
+          floating piece's ground contact instead. */}
+      <mesh geometry={geometry} material={material} />
 
       {weather === 'snow' && quality !== 'low' && !suspended && <SnowAccumulation positions={positions} />}
 

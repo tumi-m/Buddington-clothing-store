@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import type { View } from '../types'
 import { PRODUCTS, formatPrice, type Product, type ProductCategory } from '../data/products'
+import { useCart } from '../cart/CartContext'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
 import { AssetPlate } from './AssetPlate'
@@ -104,10 +105,18 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, badgeTone, onOpen, onViewInElements }: ProductCardProps) {
+  const { addItem } = useCart()
   const open = () => onOpen()
   const viewInElements = (e: React.MouseEvent) => {
     e.stopPropagation()
     onViewInElements()
+  }
+  const quickAdd = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    addItem({
+      id: product.id, code: product.code, name: product.name,
+      price: product.price, currency: product.currency, image: product.image ?? '',
+    })
   }
 
   return (
@@ -150,6 +159,18 @@ function ProductCard({ product, badgeTone, onOpen, onViewInElements }: ProductCa
               {product.badge}
             </span>
           )}
+
+          {/* Quick add — yeezy-style "+" on hover */}
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label={`Add ${product.name} to bag`}
+            onClick={quickAdd}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); quickAdd(e as unknown as React.MouseEvent) } }}
+            className="absolute bottom-3 right-3 w-9 h-9 flex items-center justify-center text-xl font-light leading-none bg-paper/90 text-ink rounded-full opacity-0 group-hover:opacity-100 hover:bg-ink hover:text-paper transition-all duration-200 focus-visible:outline-gold focus-visible:opacity-100"
+          >
+            +
+          </span>
         </div>
 
         {/* Caption block */}

@@ -4,6 +4,7 @@
 
 import type { Product } from '../data/products'
 import { formatPrice } from '../data/products'
+import { useCart } from '../cart/CartContext'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
 import { AssetPlate } from './AssetPlate'
@@ -15,6 +16,11 @@ export interface ProductDetailProps {
 }
 
 export function ProductDetail({ product, onBack, onViewInElements }: ProductDetailProps) {
+  const { addItem } = useCart()
+  const addToBag = () => addItem({
+    id: product.id, code: product.code, name: product.name,
+    price: product.price, currency: product.currency, image: product.image ?? '',
+  })
   return (
     <>
       <FolioBar roman="III" section="PRODUCT" />
@@ -78,6 +84,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
 
             <div className="flex flex-wrap items-center gap-6">
               <button
+                onClick={addToBag}
                 className="self-start font-mono uppercase text-[0.78rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
               >
                 ADD TO BAG →
