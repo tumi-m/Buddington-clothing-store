@@ -9,9 +9,11 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Weather } from '../types'
 
-interface WeatherParticlesProps {
+export interface WeatherParticlesProps {
   weather: Weather
   windStrength: number
+  /** Quality level for adaptive performance scaling. */
+  quality?: 'high' | 'low'
 }
 
 interface Cfg {
@@ -34,10 +36,14 @@ const CFG: Record<Weather, Cfg> = {
 // Volume around the cloth + in front toward the camera.
 const VOL = { x: 4, yTop: 3.4, yBase: -2.0, z: 3 }
 
-export function WeatherParticles({ weather, windStrength }: WeatherParticlesProps) {
+export function WeatherParticles({ weather, windStrength, quality = 'high' }: WeatherParticlesProps) {
   const ref = useRef<THREE.Points>(null)
   const timeRef = useRef(0)
-  const cfg = CFG[weather]
+  const cfg = useMemo(() => {
+    const base = CFG[weather]
+    if (quality !== 'low') return base
+    return { ...base, count: Math.floor(base.count * 0.35) }
+  }, [weather, quality])
 
   const positions = useMemo(() => {
     const n = cfg.count
@@ -77,6 +83,7 @@ export function WeatherParticles({ weather, windStrength }: WeatherParticlesProp
       arr[ix + 1] -= cfg.fall * speeds[i] * dt
       arr[ix + 2] += Math.sin(t * 0.9 + i * 0.7) * cfg.sway * 0.3 * dt
 
+      // cloth is roughly the y=0, x∈[-2,2], z≈0 plane — reset near it for density
       if (arr[ix + 1] < VOL.yBase - 0.3) {
         arr[ix]     = (Math.random() - 0.5) * VOL.x
         arr[ix + 1] = VOL.yTop

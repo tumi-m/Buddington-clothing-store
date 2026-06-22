@@ -50,14 +50,28 @@ body {
   outline-offset: 2px;
 }
 
+/* Utility class for consistent gold focus rings on interactive controls */
+.focus-ring:focus-visible {
+  outline: 2px solid #c9a44c;
+  outline-offset: 2px;
+}
+
 /* prefers-reduced-motion — freeze all decorative motion */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .ghost-drift {
     animation: none !important;
   }
+  /* Stop group-hover scale via Tailwind motion-reduce utilities in components */
   * {
     scroll-behavior: auto !important;
+  }
+}
+
+/* Editorial reduced motion helper */
+@media (prefers-reduced-motion: reduce) {
+  .motion-reduce\:transition-none {
+    transition: none !important;
   }
 }
 

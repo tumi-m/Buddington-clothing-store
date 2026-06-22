@@ -11,28 +11,31 @@ import { AssetPlate } from './AssetPlate'
 export interface ProductDetailProps {
   product: Product
   onBack: () => void
+  onViewInElements: (garmentId: string) => void
 }
 
-export function ProductDetail({ product, onBack }: ProductDetailProps) {
+export function ProductDetail({ product, onBack, onViewInElements }: ProductDetailProps) {
   return (
     <>
       <FolioBar roman="III" section="PRODUCT" />
 
       <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-8">
-        <button
-          onClick={onBack}
-          className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-mute hover:text-ink transition-colors mb-8"
-        >
-          ← THE COLLECTION
-        </button>
+      <button
+        onClick={onBack}
+        className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-mute hover:text-ink transition-colors mb-8 focus-visible:outline-gold"
+      >
+        ← THE COLLECTION
+      </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
           {/* Left: image stack (front + back) — borderless, bleed to edge */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8 lg:sticky lg:top-28 lg:self-start">
             {product.image ? (
               <img
                 src={product.image}
                 alt={`${product.name} — front`}
+                loading="eager"
+                decoding="sync"
                 className="w-full object-cover"
                 style={{ aspectRatio: '4/5' }}
               />
@@ -61,7 +64,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               {product.colorway}
             </p>
 
-            <p className="font-serif text-ink/85 mt-6 max-w-[28rem]" style={{ fontSize: '1.15rem' }}>
+            <p className="font-serif text-ink/80 mt-6 max-w-[28rem] leading-relaxed" style={{ fontSize: '1.12rem' }}>
               {product.description}
             </p>
 
@@ -71,27 +74,35 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               </p>
             )}
 
-            <hr className="border-hair my-6" />
+            <hr className="border-hair my-7" />
 
-            <button
-              className="self-start font-mono uppercase text-[0.78rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1"
-            >
-              ADD TO BAG →
-            </button>
+            <div className="flex flex-wrap items-center gap-6">
+              <button
+                className="self-start font-mono uppercase text-[0.78rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
+              >
+                ADD TO BAG →
+              </button>
+              <button
+                onClick={() => onViewInElements(product.id)}
+                className="font-mono uppercase text-[0.78rem] tracking-[0.14em] text-mute hover:text-gold border-b border-transparent hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
+              >
+                VIEW IN THE ELEMENTS →
+              </button>
+            </div>
 
             {/* Spec accordion — hair-rule dividers, accessible <details> */}
             <div className="mt-10 border-t border-hair">
               {SPECS.map(s => (
                 <details key={s.label} className="group border-b border-hair">
-                  <summary className="flex items-center justify-between py-3 cursor-pointer list-none">
+                  <summary className="flex items-center justify-between py-3 cursor-pointer list-none focus-visible:outline-gold rounded-sm">
                     <span className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-ink">
                       {s.label}
                     </span>
-                    <span className="font-mono text-mute group-open:rotate-45 transition-transform">
+                    <span className="font-mono text-mute group-open:rotate-45 transition-transform duration-300">
                       +
                     </span>
                   </summary>
-                  <p className="font-serif text-mute pb-4" style={{ fontSize: '1rem' }}>
+                  <p className="font-serif text-mute pb-4 leading-relaxed" style={{ fontSize: '1rem' }}>
                     {s.body}
                   </p>
                 </details>

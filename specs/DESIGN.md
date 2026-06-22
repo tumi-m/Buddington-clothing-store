@@ -99,6 +99,19 @@ Routing: NO router — single-page view-state switch (useState) over screens:
 - Sacred Red: NONE on GHOST (gold is the accent here).
 - Images: ghost-voronoi.svg, ghost-dazzle.svg (generated). Item plates → AssetPlate tone=ink.
 
+### Experience (3D cloth)
+- DOM: `<div experience>` full-screen `bg-dark-bg`. R3F `<Canvas>` with cloth simulation + lush nature ground + weather/day-night.
+- Overlay UI (`src/components/UI.tsx`):
+  - Top-left: brand wordmark + legacy garment selector panel.
+  - Top-right: COLLECTION / LOOKBOOK / STORES / SHOP nav.
+  - Top-center: `← EXIT TO SITE`.
+  - Bottom: **GarmentCarousel** — horizontal filmstrip with spring-physics drag, arrow buttons, keyboard navigation. Shows garment thumbnail (4/5), code, name, price; active item gets gold border.
+  - Bottom-right: Quality toggle, Weather selector + Day/Night toggle, Wind slider + ON/OFF, TECH INFO toggle.
+- Physics: cloth uses Verlet integration; switching garments applies a short ripple impulse to the cloth.
+- Motion: carousel drag uses spring snap (600ms ease equivalent); reduced-motion disables momentum.
+- Sacred Red: NONE on Experience (gold accent only).
+- Images: garment thumbnails reuse existing `public/images/` photos.
+
 ## ASSET INVENTORY (filled during discovery + asset-gen)
 Generated (code, in public/generated/ — run `node scripts/gen-assets.mjs`):
   ghost-voronoi.svg, ghost-dazzle.svg, ghost-noise.svg, hero-grain.svg, folio-rule.svg.
@@ -107,11 +120,15 @@ Existing photos in repo (public/images/ — slideshow art for the 3D cloth, NOT 
 product shots; not wired into the editorial screens):
   IMG_5678.PNG, IMG_5821.jpg, IMG_5822.jpg, IMG_5888.PNG, IMG_5912.PNG, IMG_6300.PNG.
 
+Existing photos wired into the storefront:
+  - Hero photo (home, right column): public/images/IMG_5678.PNG.
+  - Product front plates (shop + detail): public/images/IMG_5678.PNG, IMG_5821.jpg, IMG_5822.jpg,
+    IMG_5888.PNG, IMG_5912.PNG, IMG_6300.PNG.
+  - GHOST item plates: public/images/IMG_5678.PNG, IMG_5888.PNG, IMG_5912.PNG.
+
 Missing (the shopping list — filled per task via MISSING ASSETS):
-  - Hero photo (home, right column) — wants public/images/hero-a41.jpg (1600×2000, 4/5) —
-    AssetPlate `A41 / HERO` until supplied.
-  - Product front plates (shop + detail) — per SKU, wants public/images/<id>-front.jpg
-    (1200×1500, 4/5) — AssetPlate `<code> / FRONT` until supplied.
+  - Dedicated per-SKU product front shots (currently reusing the six existing photos; would prefer
+    public/images/<id>-front.jpg 1200×1500, 4/5).
   - Product back plates (detail) — wants public/images/<id>-back.jpg — AssetPlate `<code> / BACK`.
-  - GHOST item plates — wants public/images/ghost-0X.jpg (1200×1200, 1/1) — AssetPlate ink
-    tone until supplied.
+  - GHOST item plates — wants dedicated public/images/ghost-0X.jpg (1200×1200, 1/1).
+  - Carousel currently reuses the existing front photos for thumbnails.

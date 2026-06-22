@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { View, Weather, DayNight } from '../types'
 import type { Garment } from '../data/garments'
+import { GarmentCarousel } from './GarmentCarousel'
 
 interface UIProps {
   windStrength: number
@@ -14,6 +15,9 @@ interface UIProps {
   onWeatherChange?: (w: Weather) => void
   dayNight?: DayNight
   onDayNightToggle?: () => void
+  /** Optional quality toggle for adaptive performance scaling. */
+  quality?: 'high' | 'low'
+  onQualityChange?: (q: 'high' | 'low') => void
   /** Optional garment selector — which piece of clothing is on the cloth. */
   garments?: Garment[]
   selectedGarment?: string
@@ -23,9 +27,12 @@ interface UIProps {
 export function UI({
   windStrength, onWindChange, onInfoToggle, showInfo,
   onNavigate, weather, onWeatherChange, dayNight, onDayNightToggle,
+  quality, onQualityChange,
   garments, selectedGarment, onGarmentChange,
 }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
+
+  const currentGarment = garments?.find(g => g.id === selectedGarment)
 
   const toggleFan = () => {
     const next = !fanOn
@@ -38,7 +45,7 @@ export function UI({
       {/* ── Brand wordmark (top-left) ─────────────────────────────────────── */}
       <div className="absolute top-6 left-6 pointer-events-none select-none">
         <div
-          className="text-gold tracking-ultra-wide text-2xl font-display leading-none"
+          className="text-gold tracking-ultra-wide text-2xl font-serif leading-none"
           style={{ textShadow: '0 0 30px rgba(201,169,110,0.4)' }}
         >
           BUDDINGTON
@@ -48,15 +55,20 @@ export function UI({
         </div>
       </div>
 
-      {/* ── Garment selector (top-left, below the wordmark) ───────────────── */}
-      {garments && onGarmentChange && selectedGarment && (
-        <div className="absolute top-24 left-6 bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 w-[230px] max-h-[calc(100vh-12rem)] flex flex-col">
+      {/* ── Garment info + selector (top-left, below the wordmark) ─────── */}
+      {garments && selectedGarment && (
+        <div className="absolute top-24 left-6 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm px-4 py-3 w-[230px] max-h-[calc(100vh-12rem)] flex flex-col shadow-2xl">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Garment</span>
+            <span className="text-xs tracking-widest text-gold font-light uppercase">Garment</span>
             <span className="text-[9px] tracking-wider text-gray-600 uppercase">A/W 41</span>
           </div>
+          <div className="mb-3 pb-3 border-b border-white/10">
+            <p className="font-mono text-[0.6rem] tracking-[0.14em] text-gold">{currentGarment?.code}</p>
+            <p className="font-serif text-paper text-base leading-tight">{currentGarment?.name}</p>
+            <p className="font-mono text-gold text-[0.78rem] mt-0.5">{currentGarment?.price}</p>
+          </div>
           <div className="overflow-y-auto pr-1 -mr-1 flex flex-col gap-1">
-            {garments.map(g => {
+            {onGarmentChange && garments.map(g => {
               const active = g.id === selectedGarment
               return (
                 <button
@@ -84,9 +96,24 @@ export function UI({
       {/* ── Controls panel (bottom-right) ────────────────────────────────── */}
       <div className="absolute bottom-6 right-6 flex flex-col gap-3 items-end">
 
+        {/* Quality toggle */}
+        {onQualityChange && quality && (
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded px-4 py-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] tracking-widest text-gray-400 font-light uppercase">Quality</span>
+              <button
+                onClick={() => onQualityChange(quality === 'high' ? 'low' : 'high')}
+                className="text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 border-gold text-gold hover:bg-gold hover:text-black"
+              >
+                {quality === 'high' ? 'HIGH' : 'LOW'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Weather selector + day/night */}
         {onWeatherChange && weather && (
-          <div className="bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 min-w-[210px]">
+          <div className="bg-black/60 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[210px]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Weather</span>
               {onDayNightToggle && dayNight && (
@@ -117,7 +144,7 @@ export function UI({
         )}
 
         {/* Wind control */}
-        <div className="bg-black/60 backdrop-blur-md border border-white/8 rounded px-4 py-3 min-w-[200px]">
+        <div className="bg-black/60 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 min-w-[200px]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Wind</span>
             <button
@@ -165,6 +192,15 @@ export function UI({
           {showInfo ? 'CLOSE INFO' : 'TECH INFO'}
         </button>
       </div>
+
+      {/* ── Garment carousel (bottom filmstrip) ───────────────────────────── */}
+      {garments && onGarmentChange && (
+        <GarmentCarousel
+          garments={garments}
+          selectedGarment={selectedGarment ?? garments[0]?.id ?? ''}
+          onGarmentChange={onGarmentChange}
+        />
+      )}
 
       {/* ── Top-right nav ────────────────────────────────────────────────── */}
       <div className="absolute top-6 right-6 flex gap-6 items-center">

@@ -16,6 +16,7 @@ export interface ClothPhysicsHandle {
   positions: Float32Array
   initCloth: () => void
   update: (params: UpdateParams) => void
+  applyImpulse: (strength: number, centerX?: number, centerY?: number) => void
 }
 
 export interface UpdateParams {
@@ -30,6 +31,8 @@ export interface UpdateParams {
   hasMousePos: boolean
   isMouseDown: boolean
   time: number
+  /** Low quality reduces iterations and skips expensive weather effects. */
+  quality?: 'high' | 'low'
 }
 
 export function useClothPhysics(): ClothPhysicsHandle {
@@ -100,11 +103,32 @@ export function useClothPhysics(): ClothPhysicsHandle {
     ready.current = true
   }, [])
 
+  // Precalculated squared distance impulse distribution
+  const applyImpulse = useCallback((strength: number, centerX = 0, centerY = 0) => {
+    const p = pos.current
+    const pn = pin.current
+    const a = acc.current
+    for (let i = 0; i < N; i++) {
+      if (pn[i]) continue
+      const ix = i * 3
+      const dx = p[ix] - centerX
+      const dy = p[ix + 1] - centerY
+      const dist = Math.sqrt(dx * dx + dy * dy) + 0.001
+      const falloff = Math.max(0, 1 - dist / 2.2)
+      const force = strength * falloff
+      a[ix] += (dx / dist) * force * 0.35
+      a[ix + 1] += (dy / dist) * force * 0.35 + force * 0.25
+      a[ix + 2] += (Math.random() - 0.5) * force * 0.15
+    }
+  }, [])
+
   const update = useCallback((params: UpdateParams) => {
     if (!ready.current) return
 
     const { windStrength, weather, fanX, fanY, fanZ,
-            mouseX, mouseY, mouseZ, hasMousePos, isMouseDown, time } = params
+            mouseX, mouseY, mouseZ, hasMousePos, isMouseDown, time, quality } = params
+
+    const highQuality = quality !== 'low'
 
     const p   = pos.current
     const pp  = prev.current
@@ -166,6 +190,22 @@ export function useClothPhysics(): ClothPhysicsHandle {
         a[iz] += Math.sin(time * 1.5 + col * 0.2) * ambientWind * 0.08
       }
 
+      // rain ripple / hail jolt (high quality only)
+      if (highQuality) {
+        if (weather === 'rain' && Math.random() < 0.0008) {
+          // random droplet strike adds outward ripple from this particle
+          a[iy] += -0.018
+          a[ix] += (Math.random() - 0.5) * 0.015
+          a[iz] += (Math.random() - 0.5) * 0.015
+        }
+        if (weather === 'hail' && Math.random() < 0.0004) {
+          // heavier, sharper jolt
+          a[iy] += -0.045
+          a[ix] += (Math.random() - 0.5) * 0.03
+          a[iz] += (Math.random() - 0.5) * 0.03
+        }
+      }
+
       // mouse repulsion / attraction (poke on click)
       if (hasMousePos) {
         const dx   = p[ix] - mouseX
@@ -199,7 +239,8 @@ export function useClothPhysics(): ClothPhysicsHandle {
     }
 
     // ── Constraint satisfaction (Jakobsen) ───────────────────────────────────
-    for (let iter = 0; iter < ITERATIONS; iter++) {
+    const iter = highQuality ? ITERATIONS : Math.floor(ITERATIONS / 2)
+    for (let k = 0; k < iter; k++) {
       for (let j = 0; j < nc; j++) {
         const i1 = p1a[j], i2 = p2a[j]
         const x1 = i1*3, y1 = x1+1, z1 = x1+2
@@ -220,5 +261,5 @@ export function useClothPhysics(): ClothPhysicsHandle {
     }
   }, [])
 
-  return { positions: pos.current, initCloth, update }
+  return { positions: pos.current, initCloth, update, applyImpulse }
 }

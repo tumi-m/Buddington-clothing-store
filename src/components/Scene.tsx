@@ -19,7 +19,10 @@ interface SceneProps {
   dayNight: DayNight
   /** Selected garment image path (which piece of clothing is on the cloth). */
   garmentImage: string
+  /** Quality level for adaptive performance scaling. */
+  quality?: 'high' | 'low'
 }
+
 
 const FAN_POSITION = new THREE.Vector3(2.8, 0, 0.4)
 
@@ -126,7 +129,7 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
   }
 }
 
-export function Scene({ windStrength, weather, dayNight, garmentImage }: SceneProps) {
+export function Scene({ windStrength, weather, dayNight, garmentImage, quality = 'high' }: SceneProps) {
   const { gl } = useThree()
   const texture = useGarmentTexture(garmentImage)
   const env = useMemo(() => envFor(weather, dayNight), [weather, dayNight])
@@ -146,7 +149,7 @@ export function Scene({ windStrength, weather, dayNight, garmentImage }: ScenePr
       {dayNight === 'night' && (
         <Stars radius={80} depth={50} count={2500} factor={4} saturation={0} fade speed={0.5} />
       )}
-      <WeatherParticles weather={weather} windStrength={windStrength} />
+      <WeatherParticles weather={weather} windStrength={windStrength} quality={quality} />
 
       {/* ── Lights ──────────────────────────────────────────────────────── */}
       <ambientLight intensity={env.ambient} />
@@ -186,6 +189,7 @@ export function Scene({ windStrength, weather, dayNight, garmentImage }: ScenePr
         weather={weather}
         fanPosition={FAN_POSITION}
         texture={texture}
+        quality={quality}
       />
 
       {/* ── Fan ─────────────────────────────────────────────────────────── */}
@@ -202,7 +206,7 @@ export function Scene({ windStrength, weather, dayNight, garmentImage }: ScenePr
       />
 
       {/* ── Lush nature ground (replaces the windtunnel floor) ──────────── */}
-      <Nature weather={weather} dayNight={dayNight} />
+      <Nature weather={weather} dayNight={dayNight} quality={quality} />
 
       {/* ── Environment (HDRI reflections only) ──────────────────────────── */}
       <Environment preset="studio" background={false} />

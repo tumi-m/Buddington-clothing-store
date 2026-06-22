@@ -50,7 +50,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
         </div>
 
         {/* Chrome flag instructions */}
-        <div className="bg-white/5 border border-white/8 rounded p-4 mb-6">
+        <div className="bg-white/5 border border-white/[0.08] rounded p-4 mb-6">
           <div className="text-xs tracking-widest text-gold mb-2">ENABLE EXPERIMENTAL HTML TEXTURE</div>
           <ol className="text-xs text-gray-400 space-y-1 list-decimal list-inside">
             <li>Open Chrome and navigate to <code className="text-green-400">chrome://flags</code></li>

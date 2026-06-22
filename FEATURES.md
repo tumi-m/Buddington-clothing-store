@@ -29,19 +29,24 @@ NEVER set `verified` without evidence (test pass / rendered route / observed res
 | F22 | GHOST dark surface | As a visitor, the GHOST screen is a dark surface with an animated adversarial background. | bg-ink, ghost-voronoi.svg tiled at 10% with 24s drift; frozen under reduced-motion. | src/components/GhostCapsule.tsx | story-written | | |
 | F23 | GHOST items | As a visitor, I see three GHOST pieces with dazzle behind ink plates. | 3 ink cards, AssetPlate 1/1 tone ink, ghost-dazzle.svg 8% behind, mono name + gold price. | src/components/GhostCapsule.tsx | story-written | | |
 | F24 | GHOST honesty line | As a visitor, I see an honest framing note about GHOST. | "GHOST IS AN AESTHETIC HOMAGE… NOT A GUARANTEED CV DEFEAT." | src/components/GhostCapsule.tsx | story-written | | |
-| F25 | 3D cloth experience | As a visitor, the original 3D cloth sim still works. | Canvas+Scene render; wind slider + fan toggle affect cloth; hover ripples; click push; info panel. | src/App.tsx, src/components/Scene.tsx, UI.tsx, InfoPanel.tsx, hooks/* | story-written | | |
+| F25 | 3D cloth experience | As a visitor, the original 3D cloth sim still works. | Canvas+Scene render; wind slider + fan toggle affect cloth; hover ripples; click push; info panel; garment carousel + ripple impulse on garment change. | src/App.tsx, src/components/Scene.tsx, UI.tsx, GarmentCarousel.tsx, InfoPanel.tsx, hooks/* | story-written | | |
 | F26 | House palette/fonts | As a visitor, the site uses the Buddington house grammar. | Tailwind tokens paper/ink/gold #c9a44c/etc; Cormorant/JetBrains Mono/Noto Serif JP loaded and applied. | tailwind.config.ts, index.html | story-written | | |
 | F27 | Asset generation | As a dev, I can regenerate the code-drawn SVGs. | `node scripts/gen-assets.mjs` writes 5 SVGs to public/generated/. | scripts/gen-assets.mjs | story-written | | |
 | F28 | AssetPlate spec | As a dev, placeholder plates follow the house placeholder grammar. | props label/ratio/tone; paper bg paper-2 + hair border, ink bg ink + gold-dark border; diagonal cross; mono label; BUDDINGTON/PLATE tag; role=img. | src/components/AssetPlate.tsx | story-written | | |
 | F29 | Reveal motion + reduced-motion | As a visitor with reduced-motion preference, decorative motion freezes. | .reveal 600ms ease; @media reduced-motion disables reveal + ghost-drift; motion-reduce disables hover scale. | src/index.css, Shop.tsx | story-written | | |
 | F30 | Focus visibility | As a keyboard visitor, focus is clearly indicated. | :focus-visible 2px gold ring, offset 2px. | src/index.css | story-written | | |
 | F31 | Build green | As a dev, the project type-checks and builds. | `tsc --noEmit` exit 0; `vite build` exit 0. | tsconfig, package.json | story-written | | |
+| F32 | Experience garment carousel | As a visitor, I can browse garments in the 3D experience with a draggable carousel. | Bottom filmstrip shows thumbnail/code/name/price; drag + arrows + keyboard; active item gold border; reduced-motion instant snap. | src/components/GarmentCarousel.tsx, src/hooks/useSpringCarousel.ts, UI.tsx | story-written | | |
+| F33 | Cloth ripple on garment change | As a visitor, the cloth visibly reacts when I select a different garment. | Selecting a garment applies an impulse to cloth particles; ripple fades via Verlet damping. | src/hooks/useClothPhysics.ts, src/components/ClothMesh.tsx | story-written | | |
 
 ## Phase 1 summary
 - 31 features enumerated from the code, each with a user story + expected behaviour.
 - Status all `story-written`. No testing or fixing performed yet.
 - Known pre-existing non-issue: vite warns the Three.js bundle chunk > 500 kB (cosmetic, unrelated to this upgrade).
 
+## Build task inserted: Experience carousel + physics + UI fixes
+- F32 and F33 added to track the new Experience page upgrades.
+- QA loop paused while feature is built and verified.
+
 ## Next
-Phase 2 (TEST & DOCUMENT): exercise each story, record actual vs expected, flag every error.
-Type `continue` to proceed to Phase 2.
+Verify build, then resume Phase 2 (TEST & DOCUMENT). Type `continue` to proceed.

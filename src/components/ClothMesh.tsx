@@ -9,11 +9,12 @@ interface ClothMeshProps {
   weather: Weather
   fanPosition: THREE.Vector3
   texture: THREE.Texture | null
+  quality?: 'high' | 'low'
 }
 
-export function ClothMesh({ windStrength, weather, fanPosition, texture }: ClothMeshProps) {
+export function ClothMesh({ windStrength, weather, fanPosition, texture, quality = 'high' }: ClothMeshProps) {
   const { camera } = useThree()
-  const { positions, initCloth, update } = useClothPhysics()
+  const { positions, initCloth, update, applyImpulse } = useClothPhysics()
 
   const timeRef      = useRef(0)
   const mousePosRef  = useRef({ x: 0, y: 0, z: 0, valid: false })
@@ -64,28 +65,65 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture }: Cloth
     }
   }, [handleMouseMove])
 
-  // Material
+  // Material — neutral dark base, weather-responsive wet/sheen/roughness
   const material = useMemo(() => new THREE.MeshPhysicalMaterial({
     map:           null,
-    color:         new THREE.Color('#1a1a1a'),   // neutral dark — slideshow photos read truer
+    color:         new THREE.Color('#1a1a1a'),
     metalness:     0.25,
     roughness:     0.2,
     sheen:         1.0,
     sheenRoughness:0.25,
-    sheenColor:    new THREE.Color('#c9a44c'),    // house gold
+    sheenColor:    new THREE.Color('#c9a44c'),
     side:          THREE.DoubleSide,
     envMapIntensity: 1.0,
   }), [])
 
   useEffect(() => () => material.dispose(), [material])
 
-  // Swap in texture when ready
+  // Weather → material look
+  useEffect(() => {
+    switch (weather) {
+      case 'rain':
+        material.roughness = 0.55
+        material.sheen = 0.4
+        material.color.set('#151515')
+        break
+      case 'snow':
+        material.roughness = 0.35
+        material.sheen = 0.85
+        material.color.set('#222222')
+        break
+      case 'hail':
+        material.roughness = 0.45
+        material.sheen = 0.5
+        material.color.set('#171717')
+        break
+      case 'windy':
+        material.roughness = 0.22
+        material.sheen = 1.0
+        material.color.set('#1a1a1a')
+        break
+      default: // sunny
+        material.roughness = 0.2
+        material.sheen = 1.0
+        material.color.set('#1a1a1a')
+    }
+    material.needsUpdate = true
+  }, [material, weather])
+
+  // Swap in texture when ready. A new garment triggers a short ripple impulse
+  // so the cloth visibly reacts to the change.
+  const prevTextureRef = useRef<THREE.Texture | null>(null)
   useEffect(() => {
     if (texture) {
       material.map = texture
       material.needsUpdate = true
+      if (prevTextureRef.current !== texture) {
+        applyImpulse(0.09)
+        prevTextureRef.current = texture
+      }
     }
-  }, [material, texture])
+  }, [material, texture, applyImpulse])
 
   useFrame(() => {
     timeRef.current += 0.016
@@ -99,6 +137,7 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture }: Cloth
       hasMousePos: valid,
       isMouseDown: isDownRef.current,
       time: timeRef.current,
+      quality,
     })
 
     // Write cloth particle positions directly into geometry buffer
@@ -127,10 +166,12 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture }: Cloth
     <>
       <mesh geometry={geometry} material={material} receiveShadow castShadow />
 
+      {weather === 'snow' && quality !== 'low' && <SnowAccumulation positions={positions} />}
+
       {/* Interaction cursor — drawn on top, ignores depth so it always reads */}
       <group ref={cursorRef} visible={false} renderOrder={999}>
         <mesh>
-          <ringGeometry args={[0.1, 0.13, 40]} />
+          < ringGeometry args={[0.1, 0.13, 40]} />
           <meshBasicMaterial
             ref={ringMatRef}
             color="#c9a44c"
@@ -145,6 +186,38 @@ export function ClothMesh({ windStrength, weather, fanPosition, texture }: Cloth
           <meshBasicMaterial color="#c9a44c" transparent opacity={0.7} depthTest={false} />
         </mesh>
       </group>
+    </>
+  )
+}
+
+// ── Light snow accumulation on the pinned top edge of the cloth ──────────────
+function SnowAccumulation({ positions }: { positions: Float32Array }) {
+  const count = 8
+  const refs = useRef<THREE.Mesh[]>([])
+
+  useFrame(() => {
+    refs.current.forEach((mesh, i) => {
+      if (!mesh) return
+      // Sample evenly across the top row of particles
+      const col = Math.floor((i / (count - 1)) * (COLS - 1))
+      const pi = col * 3
+      mesh.position.set(positions[pi], positions[pi + 1] - 0.04, positions[pi + 2] + 0.02)
+      mesh.visible = positions[pi + 1] > -1.5
+    })
+  })
+
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <mesh
+          key={i}
+          ref={el => { if (el) refs.current[i] = el }}
+          visible={false}
+        >
+          <sphereGeometry args={[0.045, 8, 8]} />
+          <meshBasicMaterial color="#e8edf2" transparent opacity={0.75} depthTest={false} />
+        </mesh>
+      ))}
     </>
   )
 }

@@ -58,7 +58,7 @@ export function GhostCapsule() {
           {/* Three GHOST items — ink cards, dazzle at 8% behind each plate */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-14">
             {GHOST_ITEMS.map(item => (
-              <div key={item.code} className="bg-ink border border-gold-dark/40">
+              <div key={item.code} className="bg-ink border border-gold-dark/40 overflow-hidden group">
                 <div
                   className="relative overflow-hidden"
                   style={{ aspectRatio: '1 / 1' }}
@@ -67,7 +67,9 @@ export function GhostCapsule() {
                   <img
                     src={item.image}
                     alt={`${item.name} — GHOST capsule`}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     style={{ filter: 'grayscale(1) contrast(1.08) brightness(0.78)' }}
                   />
                   {/* Ink wash so the image sits in the dark GHOST surface */}
@@ -83,7 +85,7 @@ export function GhostCapsule() {
                     aria-hidden="true"
                   />
                 </div>
-                <div className="p-4 flex items-center justify-between">
+                <div className="p-4 flex items-center justify-between border-t border-gold-dark/30">
                   <span className="font-mono uppercase text-[0.72rem] tracking-[0.14em] text-paper">
                     {item.name}
                   </span>
@@ -94,7 +96,7 @@ export function GhostCapsule() {
           </div>
 
           {/* Honest framing line (asset-gen.md) */}
-          <p className="font-mono uppercase text-mute mt-12 tracking-[0.14em]" style={{ fontSize: '0.7rem' }}>
+          <p className="font-mono uppercase text-mute mt-14 tracking-[0.14em] max-w-[50rem]" style={{ fontSize: '0.7rem' }}>
             GHOST IS AN AESTHETIC HOMAGE TO ADVERSARIAL FASHION — NOT A GUARANTEED CV DEFEAT.
           </p>
         </section>

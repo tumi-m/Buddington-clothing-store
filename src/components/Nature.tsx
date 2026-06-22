@@ -33,9 +33,10 @@ function grassTone(weather: Weather, dayNight: DayNight): string {
 interface NatureProps {
   weather: Weather
   dayNight: DayNight
+  quality?: 'high' | 'low'
 }
 
-export function Nature({ weather, dayNight }: NatureProps) {
+export function Nature({ weather, dayNight, quality = 'high' }: NatureProps) {
   const grass = grassTone(weather, dayNight)
   return (
     <group>
@@ -45,15 +46,15 @@ export function Nature({ weather, dayNight }: NatureProps) {
         <meshStandardMaterial color={grass} roughness={1} />
       </mesh>
 
-      <GrassField base={grass} />
-      <Daisies />
-      <Flowers />
+      <GrassField base={grass} swayWeather={weather} quality={quality} />
+      <Daisies quality={quality} />
+      <Flowers quality={quality} />
       <Trees />
       <Bushes />
       <Rocks />
       <Pond position={[-7, GROUND_Y, -3.5]} />
       <Cattails center={[-7, -3.5]} />
-      <Butterflies />
+      {quality !== 'low' && <Butterflies />}
       <Hippo position={[-5.2, GROUND_Y, -2.4]} rotation={-0.3} />
       <Hippo position={[-8.4, GROUND_Y, -5.2]} rotation={0.7} scale={0.82} />
       <Cow position={[6.5, GROUND_Y, -2.5]} rotation={-0.5} />
@@ -63,22 +64,22 @@ export function Nature({ weather, dayNight }: NatureProps) {
 }
 
 // ── Grass blades (instanced for density) ──────────────────────────────────────
-function GrassField({ base }: { base: string }) {
+function GrassField({ base, swayWeather, quality }: { base: string; swayWeather: Weather; quality?: 'high' | 'low' }) {
   const ref = useRef<THREE.InstancedMesh>(null)
-  const COUNT = 700
+  const COUNT = quality === 'low' ? 200 : 700
   const dummy = useMemo(() => new THREE.Object3D(), [])
-  const blades = useMemo(() => {
-    return Array.from({ length: COUNT }, () => {
-      const a = Math.random() * Math.PI * 2
-      const r = rand(2.5, 28)
-      return {
-        x: Math.cos(a) * r,
-        z: Math.sin(a) * r,
-        rot: Math.random() * Math.PI,
-        s: rand(0.5, 1.4),
-      }
-    })
-  }, [])
+  const timeRef = useRef(0)
+  const blades = useMemo(() => Array.from({ length: COUNT }, () => {
+    const a = Math.random() * Math.PI * 2
+    const r = rand(2.5, 28)
+    return {
+      x: Math.cos(a) * r,
+      z: Math.sin(a) * r,
+      rot: Math.random() * Math.PI,
+      s: rand(0.5, 1.4),
+      phase: Math.random() * Math.PI * 2,
+    }
+  }), [COUNT])
 
   useLayoutEffect(() => {
     if (!ref.current) return
@@ -92,6 +93,26 @@ function GrassField({ base }: { base: string }) {
     ref.current.instanceMatrix.needsUpdate = true
   }, [blades, dummy])
 
+  useFrame((_, delta) => {
+    if (!ref.current) return
+    if (swayWeather !== 'windy' && swayWeather !== 'rain' && swayWeather !== 'hail') return
+    timeRef.current += Math.min(delta, 0.05)
+    const t = timeRef.current
+    const intensity = swayWeather === 'hail' ? 0.15 : swayWeather === 'rain' ? 0.08 : 0.12
+    blades.forEach((b, i) => {
+      dummy.position.set(b.x, GROUND_Y + b.s * 0.25, b.z)
+      dummy.rotation.set(
+        Math.sin(t * 1.2 + b.phase) * intensity,
+        b.rot + Math.sin(t * 0.5 + b.phase) * intensity * 0.3,
+        Math.cos(t * 0.9 + b.phase) * intensity * 0.5
+      )
+      dummy.scale.set(b.s, b.s, b.s)
+      dummy.updateMatrix()
+      ref.current!.setMatrixAt(i, dummy.matrix)
+    })
+    ref.current.instanceMatrix.needsUpdate = true
+  })
+
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, COUNT]} frustumCulled={false}>
       <coneGeometry args={[0.035, 0.5, 4]} />
@@ -103,12 +124,12 @@ function GrassField({ base }: { base: string }) {
 // ── Daisies ────────────────────────────────────────────────────────────────────
 const DAISY_COLORS = ['#ffffff', '#f4f1ea', '#f0ead6']
 
-function Daisies() {
-  const items = useMemo(() => Array.from({ length: 55 }, () => {
+function Daisies({ quality }: { quality?: 'high' | 'low' }) {
+  const items = useMemo(() => Array.from({ length: quality === 'low' ? 18 : 55 }, () => {
     const a = Math.random() * Math.PI * 2
     const r = rand(3, 24)
     return { x: Math.cos(a) * r, z: Math.sin(a) * r, s: rand(0.7, 1.2), c: pick(DAISY_COLORS) }
-  }), [])
+  }), [quality])
   return (
     <>
       {items.map((d, i) => (
@@ -134,12 +155,12 @@ function Daisies() {
 // ── Coloured flowers (5 petals + golden centre) ────────────────────────────────
 const FLOWER_COLORS = ['#d96a8e', '#e08a3c', '#8a6ad9', '#d93b3b', '#e8c14e', '#5e9ad9']
 
-function Flowers() {
-  const items = useMemo(() => Array.from({ length: 42 }, () => {
+function Flowers({ quality }: { quality?: 'high' | 'low' }) {
+  const items = useMemo(() => Array.from({ length: quality === 'low' ? 14 : 42 }, () => {
     const a = Math.random() * Math.PI * 2
     const r = rand(3.5, 25)
     return { x: Math.cos(a) * r, z: Math.sin(a) * r, s: rand(0.7, 1.3), c: pick(FLOWER_COLORS) }
-  }), [])
+  }), [quality])
   return (
     <>
       {items.map((d, i) => (
