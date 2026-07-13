@@ -12,11 +12,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MutableRefObject } from 'react'
 
 const FLIGHT_VH = 5          // virtual scroll length ≈ 5 viewport-heights (one per chapter)
-const DAMP = 0.18            // scrub-engine exponential seek damping
-const SKIP_DAMP = 0.08       // swifter, still-readable glide when skipping
+const FLIGHT_VH_TOUCH = 3.5  // shorter journey on phones — thumbs, not wheels
+// Exponential seek damping, expressed as a time constant (s⁻¹) so the scrub
+// converges at the same wall-clock rate regardless of frame rate — a per-frame
+// lerp (the scrub-engine's 0.18) crawls on low-fps mobile GPUs. 12 s⁻¹ matches
+// 0.18/frame at 60fps.
+const DAMP_K = 12
+const SKIP_K = 5             // ≈0.08/frame at 60fps — swifter, still-readable glide
 const DONE_EPS = 0.995       // progress beyond this (with target at 1) ends the flight
 const KEY_STEP = 0.12        // keyboard advance per press
 const TOUCH_GAIN = 1.6       // finger-drag feels ~1 screen per chapter
+const FLING_MS = 260         // flick inertia horizon — a swipe coasts this far
 
 export interface ScrollFlight {
   /** Damped flight progress 0→1, mutated per animation frame (no re-renders). */
@@ -30,12 +36,12 @@ export interface ScrollFlight {
 export function useScrollFlight(active: boolean): ScrollFlight {
   const progress = useRef(0)
   const target = useRef(0)
-  const damp = useRef(DAMP)
+  const damp = useRef(DAMP_K)
   const [done, setDone] = useState(false)
 
   const skip = useCallback(() => {
     target.current = 1
-    damp.current = SKIP_DAMP
+    damp.current = SKIP_K
   }, [])
 
   useEffect(() => {
@@ -50,13 +56,14 @@ export function useScrollFlight(active: boolean): ScrollFlight {
 
     progress.current = 0
     target.current = 0
-    damp.current = DAMP
+    damp.current = DAMP_K
     setDone(false)
 
     let finished = false
     let raf = 0
     const clamp = (v: number) => Math.min(1, Math.max(0, v))
-    const length = () => window.innerHeight * FLIGHT_VH
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    const length = () => window.innerHeight * (coarse ? FLIGHT_VH_TOUCH : FLIGHT_VH)
 
     const onWheel = (e: WheelEvent) => {
       if (finished) return
@@ -69,17 +76,32 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     }
 
     let touchY: number | null = null
+    let touchT = 0
+    let touchV = 0 // finger velocity, px/ms (up = forward)
     const onTouchStart = (e: TouchEvent) => {
       touchY = e.touches[0]?.clientY ?? null
+      touchT = e.timeStamp
+      touchV = 0
     }
     const onTouchMove = (e: TouchEvent) => {
       if (finished || touchY === null) return
       e.preventDefault()
       const y = e.touches[0]?.clientY ?? touchY
-      target.current = clamp(target.current + ((touchY - y) * TOUCH_GAIN) / length())
+      const dy = touchY - y
+      const dt = Math.max(1, e.timeStamp - touchT)
+      touchV = touchV * 0.6 + (dy / dt) * 0.4 // smoothed for a stable fling
+      target.current = clamp(target.current + (dy * TOUCH_GAIN) / length())
       touchY = y
+      touchT = e.timeStamp
     }
-    const onTouchEnd = () => { touchY = null }
+    const onTouchEnd = () => {
+      if (touchY !== null && !finished) {
+        // Flick inertia — coast on in the swipe's direction.
+        target.current = clamp(target.current + (touchV * FLING_MS * TOUCH_GAIN) / length())
+      }
+      touchY = null
+      touchV = 0
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (finished) return
@@ -106,8 +128,12 @@ export function useScrollFlight(active: boolean): ScrollFlight {
       window.removeEventListener('keydown', onKey)
     }
 
+    let lastTick = performance.now()
     const tick = () => {
-      progress.current += (target.current - progress.current) * damp.current
+      const now = performance.now()
+      const dt = Math.min(0.1, (now - lastTick) / 1000)
+      lastTick = now
+      progress.current += (target.current - progress.current) * (1 - Math.exp(-damp.current * dt))
       if (target.current >= 1 && progress.current > DONE_EPS) {
         // Land exactly on the resting frame, release input to OrbitControls.
         progress.current = 1
