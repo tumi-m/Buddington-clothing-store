@@ -15,6 +15,8 @@ import { Shop } from './components/Shop'
 import { ProductDetail } from './components/ProductDetail'
 import { GhostCapsule } from './components/GhostCapsule'
 import { CartDrawer } from './components/CartDrawer'
+import { FlightHUD } from './components/FlightHUD'
+import { useScrollFlight } from './hooks/useScrollFlight'
 import { getProductById } from './data/products'
 import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
@@ -47,6 +49,10 @@ export default function App() {
   const [dayNight, setDayNight] = useState<DayNight>('day')
   const [selectedGarment, setSelectedGarment] = useState<string>(GARMENTS[0].id)
   const [quality, setQuality] = useState<'high' | 'low'>('high')
+
+  // Scroll-scrubbed entry flight for the experience view (scroll-world engine).
+  // Replays on each entry; skipped entirely under prefers-reduced-motion.
+  const flight = useScrollFlight(view === 'experience')
 
   const toggleDayNight = useCallback(() => {
     setDayNight(d => (d === 'day' ? 'night' : 'day'))
@@ -105,33 +111,46 @@ export default function App() {
               dayNight={dayNight}
               garmentImage={GARMENTS.find(g => g.id === selectedGarment)?.image ?? GARMENTS[0].image}
               quality={quality}
+              flightProgress={flight.progress}
+              flightActive={!flight.done}
             />
           </Canvas>
         </Suspense>
 
-        <UI
-          windStrength={windStrength}
-          onWindChange={setWindStrength}
-          onInfoToggle={() => setShowInfo(p => !p)}
-          showInfo={showInfo}
-          onNavigate={navigate}
-          weather={weather}
-          onWeatherChange={setWeather}
-          dayNight={dayNight}
-          onDayNightToggle={toggleDayNight}
-          garments={GARMENTS}
-          selectedGarment={selectedGarment}
-          onGarmentChange={setSelectedGarment}
-          quality={quality}
-          onQualityChange={setQuality}
-        />
+        {/* Controls fade in only after the flight lands on the resting frame. */}
+        <div
+          aria-hidden={!flight.done}
+          className={`transition-opacity duration-700 ${
+            flight.done ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <UI
+            windStrength={windStrength}
+            onWindChange={setWindStrength}
+            onInfoToggle={() => setShowInfo(p => !p)}
+            showInfo={showInfo}
+            onNavigate={navigate}
+            weather={weather}
+            onWeatherChange={setWeather}
+            dayNight={dayNight}
+            onDayNightToggle={toggleDayNight}
+            garments={GARMENTS}
+            selectedGarment={selectedGarment}
+            onGarmentChange={setSelectedGarment}
+            quality={quality}
+            onQualityChange={setQuality}
+          />
+        </div>
+
+        {/* Scroll-flight HUD — chapter label, gold progress hairline, skip. */}
+        <FlightHUD progress={flight.progress} done={flight.done} onSkip={flight.skip} />
 
         {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
 
         {/* Exit back to the editorial site — overlay, does not alter UI.tsx */}
         <button
           onClick={exitExperience}
-          className="absolute bottom-3 left-3 sm:bottom-auto sm:top-6 sm:left-1/2 sm:-translate-x-1/2 z-50 font-mono uppercase text-[0.6rem] sm:text-[0.65rem] tracking-[0.14em] text-gray-400 hover:text-gold border border-white/10 hover:border-gold px-3 py-1.5 rounded bg-black/40 backdrop-blur-md transition-colors focus-visible:outline-gold"
+          className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 sm:bottom-auto sm:top-6 sm:left-1/2 sm:-translate-x-1/2 z-50 font-mono uppercase text-[0.6rem] sm:text-[0.65rem] tracking-[0.14em] text-gray-400 hover:text-gold border border-white/10 hover:border-gold px-3 py-2 sm:py-1.5 rounded bg-black/40 backdrop-blur-md transition-colors focus-visible:outline-gold"
         >
           ← EXIT<span className="hidden sm:inline"> TO SITE</span>
         </button>

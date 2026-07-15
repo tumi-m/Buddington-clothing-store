@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { View } from '../types'
 import { PRODUCTS, formatPrice, type Product, type ProductCategory } from '../data/products'
 import { useCart } from '../cart/CartContext'
+import { useReveal } from '../hooks/useReveal'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
 import { AssetPlate } from './AssetPlate'
@@ -23,6 +24,7 @@ export interface ShopProps {
 
 export function Shop({ onOpenProduct, onNavigate, onViewInElements }: ShopProps) {
   const [filter, setFilter] = useState<Filter>('ALL')
+  const reveal = useReveal()
 
   const shown = filter === 'ALL' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter)
 
@@ -64,19 +66,25 @@ export function Shop({ onOpenProduct, onNavigate, onViewInElements }: ShopProps)
 
         {/* Grid — borderless large image containers, image bleeds to cell edge */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
-          {shown.map(p => {
+          {shown.map((p, i) => {
             // The ONE allowed Sacred-Red badge on this screen:
             const isLastPiece = p.badge === 'LAST PIECE'
             const useRed = isLastPiece && !redUsed
             if (useRed) redUsed = true
             return (
-              <ProductCard
+              <div
                 key={p.id}
-                product={p}
-                badgeTone={useRed ? 'signal' : isLastPiece ? 'ink' : p.badge ? 'ink' : 'none'}
-                onOpen={() => onOpenProduct(p.id)}
-                onViewInElements={() => onViewInElements(p.id)}
-              />
+                ref={reveal}
+                className="reveal-scroll"
+                style={{ transitionDelay: `${(i % 4) * 70}ms` }}
+              >
+                <ProductCard
+                  product={p}
+                  badgeTone={useRed ? 'signal' : isLastPiece ? 'ink' : p.badge ? 'ink' : 'none'}
+                  onOpen={() => onOpenProduct(p.id)}
+                  onViewInElements={() => onViewInElements(p.id)}
+                />
+              </div>
             )
           })}
         </div>

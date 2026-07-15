@@ -40,6 +40,29 @@ body {
   animation: buddington-reveal 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Scroll-triggered reveal — added by useReveal (IntersectionObserver) when an
+   element first enters the viewport. Same restrained curve as .reveal. */
+.reveal-scroll {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-scroll.is-inview {
+  opacity: 1;
+  transform: none;
+}
+
+/* Experience scroll-flight cue — slow restrained pulse */
+@keyframes buddington-cue {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 0.35; }
+}
+.flight-cue {
+  animation: buddington-cue 2.4s ease-in-out infinite;
+}
+
 /* GHOST background drift — slow adversarial feel */
 @keyframes buddington-drift {
   from { background-position: 0 0; }
@@ -64,8 +87,14 @@ body {
 /* prefers-reduced-motion — freeze all decorative motion */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .ghost-drift {
+  .ghost-drift,
+  .flight-cue {
     animation: none !important;
+  }
+  .reveal-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
   /* Stop group-hover scale via Tailwind motion-reduce utilities in components */
   * {

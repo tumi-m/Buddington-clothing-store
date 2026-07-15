@@ -10,7 +10,9 @@ import { Fan } from './Fan'
 import { SkyDome } from './SkyDome'
 import { WeatherParticles } from './WeatherParticles'
 import { Nature } from './Nature'
+import { FlightRig } from './FlightRig'
 import { useGarmentTexture } from '../hooks/useGarmentTexture'
+import type { MutableRefObject } from 'react'
 import type { Weather, DayNight } from '../types'
 
 interface SceneProps {
@@ -23,6 +25,12 @@ interface SceneProps {
   quality?: 'high' | 'low'
   /** Wind-tunnel mode — garment floats suspended in the fan's airflow. */
   suspended?: boolean
+  /** Scroll-flight progress ref (useScrollFlight). When provided, the entry
+   *  camera flight is available; FlightRig owns the camera while
+   *  `flightActive` is true and OrbitControls takes over afterwards. */
+  flightProgress?: MutableRefObject<number>
+  /** True while the scroll flight owns the camera. */
+  flightActive?: boolean
 }
 
 
@@ -132,7 +140,7 @@ function envFor(weather: Weather, dayNight: DayNight): Env {
   }
 }
 
-export function Scene({ windStrength, weather, dayNight, garmentImage, quality = 'high', suspended = true }: SceneProps) {
+export function Scene({ windStrength, weather, dayNight, garmentImage, quality = 'high', suspended = true, flightProgress, flightActive = false }: SceneProps) {
   const { gl } = useThree()
   const texture = useGarmentTexture(garmentImage)
   const env = useMemo(() => envFor(weather, dayNight), [weather, dayNight])
@@ -215,9 +223,13 @@ export function Scene({ windStrength, weather, dayNight, garmentImage, quality =
       {/* ── Environment (HDRI reflections only) ──────────────────────────── */}
       <Environment preset="studio" background={false} />
 
-      {/* ── Camera controls ──────────────────────────────────────────────── */}
+      {/* ── Scroll-flight camera (scroll-world Architecture A) ───────────── */}
+      {flightProgress && <FlightRig progress={flightProgress} enabled={flightActive} />}
+
+      {/* ── Camera controls (take over after the flight lands) ──────────── */}
       <OrbitControls
         makeDefault
+        enabled={!flightActive}
         target={[0, 0, 0]}
         minPolarAngle={Math.PI * 0.15}
         maxPolarAngle={Math.PI * 0.80}

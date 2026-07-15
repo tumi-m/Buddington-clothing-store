@@ -97,7 +97,7 @@ export function UI({
 
       {/* ── Active piece — code / price / add (above the carousel) ─────────── */}
       {current && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[6.5rem] sm:bottom-[7.5rem] z-30 flex flex-col items-center gap-1.5 select-none pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] sm:bottom-[7.5rem] z-30 flex flex-col items-center gap-1.5 select-none pointer-events-none">
           <p className="font-mono uppercase text-[0.7rem] tracking-[0.2em] text-paper">{current.code}</p>
           <p className="font-mono text-gold text-[0.8rem]">{current.price}</p>
           <button
@@ -113,7 +113,7 @@ export function UI({
 
       {/* ── Carousel of 3D-rendered garments (bottom, swipeable) ──────────── */}
       {garments && onGarmentChange && garments.length > 1 && (
-        <div className="absolute inset-x-0 bottom-2 sm:bottom-3 z-20 pointer-events-none">
+        <div className="absolute inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] sm:bottom-3 z-20 pointer-events-none">
           <div className="mx-auto w-full sm:max-w-2xl pointer-events-auto">
             <GarmentStrip
               garments={garments}
