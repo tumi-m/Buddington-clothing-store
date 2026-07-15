@@ -3,7 +3,7 @@
 // editorial screens over the existing 3D cloth experience, which remains a
 // reachable view ("EXPERIENCE"). Existing 3D wiring (Scene/UI/InfoPanel) is intact.
 
-import { useState, Suspense, useCallback } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Scene } from './components/Scene'
@@ -20,6 +20,18 @@ import { useScrollFlight } from './hooks/useScrollFlight'
 import { getProductById } from './data/products'
 import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
+
+// The journey drives the elements: each flight chapter sweeps the scene
+// through the weather system and fan physics — calm sky, rising wind on the
+// descent, rain over the ground, full-gale hail at THE CURRENT, then a
+// clearing calm as the camera settles on the garment.
+const CHAPTER_ELEMENTS: readonly { weather: Weather; wind: number }[] = [
+  { weather: 'sunny', wind: 0.25 }, // I   — THE SKY
+  { weather: 'windy', wind: 0.7 },  // II  — THE DESCENT
+  { weather: 'rain',  wind: 0.5 },  // III — THE GROUND
+  { weather: 'hail',  wind: 1.0 },  // IV  — THE CURRENT
+  { weather: 'sunny', wind: 0.5 },  // V   — THE GARMENT
+]
 
 function Loader() {
   return (
@@ -53,6 +65,15 @@ export default function App() {
   // Scroll-scrubbed entry flight for the experience view (scroll-world engine).
   // Replays on each entry; skipped entirely under prefers-reduced-motion.
   const flight = useScrollFlight(view === 'experience')
+
+  // While the flight owns the camera, its chapters drive weather + wind.
+  // After landing (or under reduced motion) the user is back in control.
+  useEffect(() => {
+    if (view !== 'experience' || flight.done) return
+    const preset = CHAPTER_ELEMENTS[flight.chapter]
+    setWeather(preset.weather)
+    setWindStrength(preset.wind)
+  }, [view, flight.chapter, flight.done])
 
   const toggleDayNight = useCallback(() => {
     setDayNight(d => (d === 'day' ? 'night' : 'day'))
@@ -117,33 +138,34 @@ export default function App() {
           </Canvas>
         </Suspense>
 
-        {/* Controls fade in only after the flight lands on the resting frame. */}
-        <div
-          aria-hidden={!flight.done}
-          className={`transition-opacity duration-700 ${
-            flight.done ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          <UI
-            windStrength={windStrength}
-            onWindChange={setWindStrength}
-            onInfoToggle={() => setShowInfo(p => !p)}
-            showInfo={showInfo}
-            onNavigate={navigate}
-            weather={weather}
-            onWeatherChange={setWeather}
-            dayNight={dayNight}
-            onDayNightToggle={toggleDayNight}
-            garments={GARMENTS}
-            selectedGarment={selectedGarment}
-            onGarmentChange={setSelectedGarment}
-            quality={quality}
-            onQualityChange={setQuality}
-          />
-        </div>
+        {/* UI stays live during the flight — carousel, garment info and bag are
+            always present; only the settings stack waits for landing. */}
+        <UI
+          windStrength={windStrength}
+          onWindChange={setWindStrength}
+          onInfoToggle={() => setShowInfo(p => !p)}
+          showInfo={showInfo}
+          onNavigate={navigate}
+          weather={weather}
+          onWeatherChange={setWeather}
+          dayNight={dayNight}
+          onDayNightToggle={toggleDayNight}
+          garments={GARMENTS}
+          selectedGarment={selectedGarment}
+          onGarmentChange={setSelectedGarment}
+          quality={quality}
+          onQualityChange={setQuality}
+          flightActive={!flight.done}
+        />
 
-        {/* Scroll-flight HUD — chapter label, gold progress hairline, skip. */}
-        <FlightHUD progress={flight.progress} done={flight.done} onSkip={flight.skip} />
+        {/* Scroll-flight HUD — flight log, gold progress hairline, skip. */}
+        <FlightHUD
+          progress={flight.progress}
+          done={flight.done}
+          chapter={flight.chapter}
+          maxChapter={flight.maxChapter}
+          onSkip={flight.skip}
+        />
 
         {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
 

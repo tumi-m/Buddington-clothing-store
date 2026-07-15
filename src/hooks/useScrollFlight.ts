@@ -29,15 +29,23 @@ export interface ScrollFlight {
   progress: MutableRefObject<number>
   /** True once the flight has landed on the resting frame — controls hand off. */
   done: boolean
+  /** Current chapter index 0–4 (updates as a state, ≤5 renders per flight). */
+  chapter: number
+  /** Highest chapter reached — the flight-log stamps collected so far. */
+  maxChapter: number
   /** Glide straight to the resting frame. */
   skip: () => void
 }
+
+const CHAPTER_COUNT = 5
 
 export function useScrollFlight(active: boolean): ScrollFlight {
   const progress = useRef(0)
   const target = useRef(0)
   const damp = useRef(DAMP_K)
   const [done, setDone] = useState(false)
+  const [chapter, setChapter] = useState(0)
+  const [maxChapter, setMaxChapter] = useState(0)
 
   const skip = useCallback(() => {
     target.current = 1
@@ -50,6 +58,8 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       progress.current = 1
       target.current = 1
+      setChapter(CHAPTER_COUNT - 1)
+      setMaxChapter(CHAPTER_COUNT - 1)
       setDone(true)
       return
     }
@@ -58,6 +68,8 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     target.current = 0
     damp.current = DAMP_K
     setDone(false)
+    setChapter(0)
+    setMaxChapter(0)
 
     let finished = false
     let raf = 0
@@ -76,31 +88,50 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     }
 
     let touchY: number | null = null
+    let touchX = 0
     let touchT = 0
     let touchV = 0 // finger velocity, px/ms (up = forward)
+    let locked: 'flight' | 'ignore' | null = null // direction lock per gesture
     const onTouchStart = (e: TouchEvent) => {
+      // Gestures that start on interactive furniture (garment carousel,
+      // controls) belong to those elements, not the flight scrub.
+      const target0 = e.target as Element | null
+      locked = target0?.closest?.('[data-flight-ignore]') ? 'ignore' : null
       touchY = e.touches[0]?.clientY ?? null
+      touchX = e.touches[0]?.clientX ?? 0
       touchT = e.timeStamp
       touchV = 0
     }
     const onTouchMove = (e: TouchEvent) => {
-      if (finished || touchY === null) return
-      e.preventDefault()
+      if (finished || touchY === null || locked === 'ignore') return
       const y = e.touches[0]?.clientY ?? touchY
+      const x = e.touches[0]?.clientX ?? touchX
       const dy = touchY - y
+      if (locked === null) {
+        // Lock direction on first significant movement: horizontal swipes
+        // (e.g. browsing the carousel) are left to the page.
+        const adx = Math.abs(x - touchX)
+        const ady = Math.abs(dy)
+        if (adx < 6 && ady < 6) return
+        locked = adx > ady ? 'ignore' : 'flight'
+        if (locked === 'ignore') return
+      }
+      e.preventDefault()
       const dt = Math.max(1, e.timeStamp - touchT)
       touchV = touchV * 0.6 + (dy / dt) * 0.4 // smoothed for a stable fling
       target.current = clamp(target.current + (dy * TOUCH_GAIN) / length())
       touchY = y
+      touchX = x
       touchT = e.timeStamp
     }
     const onTouchEnd = () => {
-      if (touchY !== null && !finished) {
+      if (touchY !== null && !finished && locked === 'flight') {
         // Flick inertia — coast on in the swipe's direction.
         target.current = clamp(target.current + (touchV * FLING_MS * TOUCH_GAIN) / length())
       }
       touchY = null
       touchV = 0
+      locked = null
     }
 
     const onKey = (e: KeyboardEvent) => {
@@ -129,11 +160,18 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     }
 
     let lastTick = performance.now()
+    let lastChapter = 0
     const tick = () => {
       const now = performance.now()
       const dt = Math.min(0.1, (now - lastTick) / 1000)
       lastTick = now
       progress.current += (target.current - progress.current) * (1 - Math.exp(-damp.current * dt))
+      const c = Math.min(CHAPTER_COUNT - 1, Math.floor(progress.current * CHAPTER_COUNT))
+      if (c !== lastChapter) {
+        lastChapter = c
+        setChapter(c)
+        setMaxChapter(m => Math.max(m, c))
+      }
       if (target.current >= 1 && progress.current > DONE_EPS) {
         // Land exactly on the resting frame, release input to OrbitControls.
         progress.current = 1
@@ -158,5 +196,5 @@ export function useScrollFlight(active: boolean): ScrollFlight {
     }
   }, [active])
 
-  return { progress, done, skip }
+  return { progress, done, chapter, maxChapter, skip }
 }

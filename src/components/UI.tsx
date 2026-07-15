@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { View, Weather, DayNight } from '../types'
 import type { Garment } from '../data/garments'
 import { useCart } from '../cart/CartContext'
@@ -23,6 +23,44 @@ interface UIProps {
   garments?: Garment[]
   selectedGarment?: string
   onGarmentChange?: (id: string) => void
+  /** True while the entry scroll-flight owns the camera — the settings stack
+   *  stays out of the frame until landing; carousel and bag remain live. */
+  flightActive?: boolean
+}
+
+// ── GALE TRIAL — hold the fan at gale to earn the STORMPROOF stamp ─────────
+const GALE_THRESHOLD = 0.9
+const GALE_HOLD_S = 6
+const STORMPROOF_KEY = 'buddington-stormproof'
+
+function useGaleTrial(windStrength: number) {
+  const [earned, setEarned] = useState(() => {
+    try { return localStorage.getItem(STORMPROOF_KEY) === '1' } catch { return false }
+  })
+  const [held, setHeld] = useState(0)
+  const atGale = windStrength >= GALE_THRESHOLD
+
+  useEffect(() => {
+    if (earned || !atGale) {
+      setHeld(0)
+      return
+    }
+    const started = performance.now()
+    const id = window.setInterval(() => {
+      const s = (performance.now() - started) / 1000
+      if (s >= GALE_HOLD_S) {
+        window.clearInterval(id)
+        setHeld(GALE_HOLD_S)
+        setEarned(true)
+        try { localStorage.setItem(STORMPROOF_KEY, '1') } catch { /* private mode */ }
+      } else {
+        setHeld(s)
+      }
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [earned, atGale])
+
+  return { earned, held, atGale }
 }
 
 export function UI({
@@ -30,10 +68,12 @@ export function UI({
   onNavigate, weather, onWeatherChange, dayNight, onDayNightToggle,
   quality, onQualityChange,
   garments, selectedGarment, onGarmentChange,
+  flightActive = false,
 }: UIProps) {
   const [fanOn, setFanOn] = useState(true)
   const [controlsOpen, setControlsOpen] = useState(false)   // mobile: collapse the control stack
   const { count, open, addItem } = useCart()
+  const trial = useGaleTrial(windStrength)
 
   const toggleFan = () => {
     const next = !fanOn
@@ -71,6 +111,11 @@ export function UI({
         <div className="hidden sm:block text-xs tracking-widest text-gray-600 mt-1 font-light">
           A/W 41 · IN THE ELEMENTS
         </div>
+        {trial.earned && (
+          <div className="text-[10px] tracking-widest text-gold mt-1 font-light">
+            ✦ STORMPROOF
+          </div>
+        )}
       </div>
 
       {/* ── GTA-style garment toggles (one on each side) ──────────────────── */}
@@ -97,7 +142,7 @@ export function UI({
 
       {/* ── Active piece — code / price / add (above the carousel) ─────────── */}
       {current && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] sm:bottom-[7.5rem] z-30 flex flex-col items-center gap-1.5 select-none pointer-events-none">
+        <div data-flight-ignore className="absolute left-1/2 -translate-x-1/2 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] sm:bottom-[7.5rem] z-30 flex flex-col items-center gap-1.5 select-none pointer-events-none">
           <p className="font-mono uppercase text-[0.7rem] tracking-[0.2em] text-paper">{current.code}</p>
           <p className="font-mono text-gold text-[0.8rem]">{current.price}</p>
           <button
@@ -113,7 +158,7 @@ export function UI({
 
       {/* ── Carousel of 3D-rendered garments (bottom, swipeable) ──────────── */}
       {garments && onGarmentChange && garments.length > 1 && (
-        <div className="absolute inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] sm:bottom-3 z-20 pointer-events-none">
+        <div data-flight-ignore className="absolute inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] sm:bottom-3 z-20 pointer-events-none">
           <div className="mx-auto w-full sm:max-w-2xl pointer-events-auto">
             <GarmentStrip
               garments={garments}
@@ -124,8 +169,16 @@ export function UI({
         </div>
       )}
 
-      {/* ── Controls (bottom-right on desktop · collapsible top-right on mobile) ── */}
-      <div className="absolute right-3 md:right-6 top-16 md:top-auto md:bottom-6 z-40 flex flex-col gap-2 md:gap-3 items-end">
+      {/* ── Controls (bottom-right on desktop · collapsible top-right on mobile).
+             During the entry flight the stack stays out of frame — the journey
+             drives the elements until the camera lands. ── */}
+      <div
+        data-flight-ignore
+        aria-hidden={flightActive}
+        className={`absolute right-3 md:right-6 top-16 md:top-auto md:bottom-6 z-40 flex flex-col gap-2 md:gap-3 items-end transition-opacity duration-700 ${
+          flightActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
         {/* Mobile toggle */}
         <button
           type="button"
@@ -214,6 +267,27 @@ export function UI({
               <span className="text-xs text-gray-700">calm</span>
               <span className="text-xs text-gray-700">gale</span>
             </div>
+          </div>
+
+          {/* Gale Trial — gamified use of the fan physics */}
+          <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 w-[200px]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] tracking-widest text-gray-400 font-light uppercase">Gale Trial</span>
+              <span className={`text-[10px] tracking-wider uppercase ${trial.earned ? 'text-gold' : trial.atGale ? 'text-gold' : 'text-gray-600'}`}>
+                {trial.earned ? '✦ STORMPROOF' : trial.atGale ? `${trial.held.toFixed(1)}S / ${GALE_HOLD_S}S` : 'LOCKED'}
+              </span>
+            </div>
+            <div className="relative h-px bg-white/10 overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-gold"
+                style={{ width: `${(trial.earned ? 1 : trial.held / GALE_HOLD_S) * 100}%` }}
+              />
+            </div>
+            {!trial.earned && (
+              <p className="text-[9px] text-gray-600 mt-2 leading-relaxed">
+                Hold the fan at gale for {GALE_HOLD_S}s — keep the garment flying to earn the STORMPROOF stamp.
+              </p>
+            )}
           </div>
 
           {/* Info toggle */}
