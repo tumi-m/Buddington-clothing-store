@@ -36,3 +36,39 @@ your whole src/ at once, so edits stay consistent. Claude Pro does the seeing; G
 NOTE: AGENTS.md is the de-facto standard many agent harnesses read. If your Claude Code setup
 prefers CLAUDE.md, just copy AGENTS.md to CLAUDE.md — same content.
 ```
+
+## Sound — Spotify & Apple Music while you shop
+
+A small **SOUND** control sits in a bottom corner of every view. Music started
+there keeps playing across the whole store — shop, product pages, GHOST, and
+the 3D experience — because the player lives above the view tree
+(`src/music/`, `src/components/MusicDock.tsx`).
+
+Three ways to play, one at a time:
+
+| Mode | Needs | What the shopper gets |
+| --- | --- | --- |
+| Paste a link | nothing | The provider's official embed player for any Spotify or Apple Music playlist, album or track link. |
+| Connect Spotify | `VITE_SPOTIFY_CLIENT_ID` | Their own playlists, played in the page with play/pause/next. Spotify only plays through the Web API for **Premium** accounts; free accounts are pointed to paste-a-link. |
+| Connect Apple Music | `APPLE_MUSIC_*` on Netlify | Their library playlists via MusicKit. Without a subscription, MusicKit reports preview-only and the dock says so. |
+
+With nothing configured the store still works: only paste-a-link is offered,
+and Connect buttons are hidden rather than shown broken. Copy `.env.example`
+for the full list.
+
+**Spotify.** Create an app in the Spotify developer dashboard, add each site
+origin with a trailing slash (e.g. `https://your-site.netlify.app/`) as a
+Redirect URI, and set `VITE_SPOTIFY_CLIENT_ID`. Sign-in uses Authorization Code
+with PKCE, so there is no client secret. A new Spotify app starts in development
+mode, where only accounts you add in its dashboard can sign in; open it to all
+shoppers through Spotify's quota extension.
+
+**Apple Music.** Needs an Apple Developer Program membership and a MusicKit
+private key. Set `APPLE_MUSIC_TEAM_ID`, `APPLE_MUSIC_KEY_ID`,
+`APPLE_MUSIC_PRIVATE_KEY` and (recommended) `APPLE_MUSIC_ALLOWED_ORIGINS` in
+Netlify's environment. `netlify/functions/apple-music-token.mjs` signs a
+short-lived developer token server-side, so the key never reaches the browser.
+Locally, use `netlify dev` — plain `npm run dev` has no functions, and the dock
+treats Apple Music as not configured.
+
+`npm test` covers link parsing, PKCE and the token signer.

@@ -17,6 +17,7 @@ import { GhostCapsule } from './components/GhostCapsule'
 import { CartDrawer } from './components/CartDrawer'
 import { FlightHUD } from './components/FlightHUD'
 import { useScrollFlight } from './hooks/useScrollFlight'
+import { useMusicDockPlacement } from './music/MusicContext'
 import { getProductById } from './data/products'
 import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
@@ -65,6 +66,9 @@ export default function App() {
   // Scroll-scrubbed entry flight for the experience view (scroll-world engine).
   // Replays on each entry; skipped entirely under prefers-reduced-motion.
   const flight = useScrollFlight(view === 'experience')
+
+  // Keep the sound dock clear of each view's own controls and text.
+  useMusicDockPlacement(view === 'experience' ? 'immersive' : 'editorial')
 
   // While the flight owns the camera, its chapters drive weather + wind.
   // After landing (or under reduced motion) the user is back in control.
