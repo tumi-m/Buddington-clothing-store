@@ -43,9 +43,9 @@ export function Home({ onNavigate }: HomeProps) {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        {/* Soft accent wash behind the headline */}
+        {/* Soft accent wash behind the headline — drifts against the scroll */}
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
+          className="parallax-slow pointer-events-none absolute inset-x-0 top-0 h-[520px]"
           style={{
             background:
               'radial-gradient(60% 100% at 50% 0%, rgba(77,107,254,0.10) 0%, rgba(77,107,254,0) 70%)',
@@ -100,14 +100,19 @@ export function Home({ onNavigate }: HomeProps) {
         {/* Framed hero plate — opens like a shutter */}
         <div className="relative mx-auto max-w-[1000px] px-4 pb-14 sm:px-6 lg:px-8">
           <Reveal variant="wipe" delay={320} className="card group overflow-hidden shadow-lift">
-            <img
-              src="/images/IMG_5678.PNG"
-              alt="Buddington A/W 41 — hero look"
-              loading="eager"
-              decoding="sync"
-              className="media-zoom w-full object-cover"
-              style={{ aspectRatio: '16 / 10' }}
-            />
+            {/* The parallax layer is oversized so drifting never exposes an
+                edge; the hover zoom lives on the image inside it, so the two
+                transforms never contend for the same element. */}
+            <div className="parallax-media">
+              <img
+                src="/images/IMG_5678.PNG"
+                alt="Buddington A/W 41 — hero look"
+                loading="eager"
+                decoding="sync"
+                className="media-zoom w-full object-cover"
+                style={{ aspectRatio: '16 / 10' }}
+              />
+            </div>
           </Reveal>
         </div>
       </section>

@@ -3,6 +3,7 @@
 // Uses <details> for the spec accordion — accessible, no JS, keyboard-operable.
 
 import { useState } from 'react'
+import { useMagnetic } from '../hooks/useMagnetic'
 import type { Product } from '../data/products'
 import { formatPrice } from '../data/products'
 import { useCart } from '../cart/CartContext'
@@ -23,6 +24,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
   const { addItem } = useCart()
   const [size, setSize] = useState<string | null>(null)
   const [error, setError] = useState(false)
+  const magnetic = useMagnetic(0.2)
 
   const addToBag = () => {
     if (!size) {
@@ -164,7 +166,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
             </Reveal>
 
             <Reveal variant="up" delay={420} className="mt-6 flex flex-wrap items-center gap-3">
-              <button onClick={addToBag} className="btn-primary">
+              <button ref={magnetic} onClick={addToBag} className="btn-primary magnetic">
                 Add to bag
               </button>
               <button onClick={() => onViewInElements(product.id)} className="btn-secondary">

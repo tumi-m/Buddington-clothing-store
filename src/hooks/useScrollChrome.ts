@@ -21,6 +21,10 @@ export function useScrollChrome(ref: RefObject<HTMLElement>): void {
       const max = el.scrollHeight - el.clientHeight
       const p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0
       el.style.setProperty('--sp', p.toFixed(4))
+      // Raw offset in pixels, for parallax that should track distance rather
+      // than page progress. Capped: past a screen or so nothing reads as
+      // parallax any more, it just drifts off.
+      el.style.setProperty('--sy', `${Math.min(el.scrollTop, 1200).toFixed(1)}px`)
       const scrolled = el.scrollTop > 8 ? '1' : '0'
       if (el.dataset.scrolled !== scrolled) el.dataset.scrolled = scrolled
     }

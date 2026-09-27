@@ -131,10 +131,14 @@ function BagStage({ items, subtotal, setQty, setSize, removeItem, onCheckout }: 
   return (
     <>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
-        {items.map(item => {
+        {items.map((item, i) => {
           const key = lineKey(item)
           return (
-          <div key={key} className="flex gap-4">
+          <div
+            key={key}
+            className="deal-in flex gap-4"
+            style={{ animationDelay: `${Math.min(i, 6) * 55}ms` }}
+          >
             <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-paper-2">
               <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
             </div>
@@ -298,12 +302,27 @@ function DoneStage({ onClose }: { onClose: () => void }) {
   const ref = (Math.floor(Math.random() * 9000) + 1000).toString()
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-      <div
-        className="grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-xl text-accent"
+      {/* The tick draws itself rather than popping in — the one flourish the
+          confirmation gets. */}
+      <svg
+        viewBox="0 0 48 48"
+        className="h-14 w-14 text-accent"
+        fill="none"
         aria-hidden="true"
       >
-        ✓
-      </div>
+        <circle
+          className="check-ring"
+          cx="24" cy="24" r="21"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+          opacity="0.35"
+        />
+        <path
+          className="check-draw"
+          d="M15 24.5 L21.5 31 L33 19"
+          stroke="currentColor" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+      </svg>
       <p className="text-[1.5rem] font-medium text-ink">Thank you</p>
       <p className="max-w-[18rem] text-[0.88rem] leading-relaxed text-mute">
         Your order <span className="font-mono text-ink">#BDG-{ref}</span> has been placed.

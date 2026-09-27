@@ -2,8 +2,10 @@
 // Global top navigation for the editorial shell. View-state switcher (no router).
 // Product-site grammar: white bar, sentence-case links, accent pill for the bag.
 
+import { useEffect, useRef, useState } from 'react'
 import type { View } from '../types'
 import { useCart } from '../cart/CartContext'
+import { useMagnetic } from '../hooks/useMagnetic'
 
 interface NavItem {
   key: View
@@ -24,6 +26,22 @@ export interface NavProps {
 
 export function Nav({ view, onNavigate }: NavProps) {
   const { count, open } = useCart()
+  const magnetic = useMagnetic(0.22)
+
+  // Bump the bag when the count actually changes — not on every render, and
+  // not on first paint for a bag restored from storage.
+  const [bump, setBump] = useState(false)
+  const prevCount = useRef(count)
+  useEffect(() => {
+    if (count > prevCount.current) {
+      setBump(true)
+      const id = window.setTimeout(() => setBump(false), 460)
+      prevCount.current = count
+      return () => window.clearTimeout(id)
+    }
+    prevCount.current = count
+  }, [count])
+
   return (
     <header className="sticky top-0 z-40 border-b border-hair bg-paper/80 backdrop-blur-xl">
       <div className="nav-shell mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
@@ -68,9 +86,10 @@ export function Nav({ view, onNavigate }: NavProps) {
 
           {/* Bag */}
           <button
+            ref={magnetic}
             onClick={open}
             aria-label={`Open bag, ${count} item${count === 1 ? '' : 's'}`}
-            className="btn-primary ml-1 shrink-0 px-4 py-1.5 text-[0.85rem]"
+            className={`btn-primary magnetic ml-1 shrink-0 px-4 py-1.5 text-[0.85rem] ${bump ? 'bump' : ''}`}
           >
             Bag{count > 0 ? ` · ${count}` : ''}
           </button>
