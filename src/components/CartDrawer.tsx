@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCart, formatMoney, lineKey } from '../cart/CartContext'
 import { useDialogFocus } from '../hooks/useDialogFocus'
+import { ApplePayButton } from './ApplePayButton'
 
 type Stage = 'bag' | 'checkout' | 'done'
 
@@ -88,6 +89,7 @@ export function CartDrawer() {
 
         {stage === 'checkout' && (
           <CheckoutStage
+            items={items}
             subtotal={subtotal}
             onBack={() => setStage('bag')}
             onPlaced={() => { clear(); setStage('done') }}
@@ -218,8 +220,16 @@ function BagStage({ items, subtotal, setQty, setSize, removeItem, onCheckout }: 
 }
 
 // ── Checkout ─────────────────────────────────────────────────────────────────
-function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBack: () => void; onPlaced: () => void }) {
+interface CheckoutStageProps {
+  items: ReturnType<typeof useCart>['items']
+  subtotal: number
+  onBack: () => void
+  onPlaced: () => void
+}
+
+function CheckoutStage({ items, subtotal, onBack, onPlaced }: CheckoutStageProps) {
   const [submitting, setSubmitting] = useState(false)
+  const currency = items[0]?.currency ?? '£'
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -231,6 +241,15 @@ function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBac
   return (
     <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+        {/* Express checkout. Renders only where Apple Pay genuinely works. */}
+        <ApplePayButton items={items} subtotal={subtotal} currency={currency} onPaid={onPlaced} />
+
+        {/* Said plainly, because a card form that looks real and takes nothing
+            is worse than one that admits what it is. */}
+        <p className="rounded-lg bg-paper-2 px-3 py-2 text-[0.74rem] leading-relaxed text-mute">
+          Demonstration checkout — no card is charged and no details are sent anywhere.
+        </p>
+
         <Fieldset legend="Contact">
           <Field label="Email" type="email" name="email" autoComplete="email" required />
         </Fieldset>

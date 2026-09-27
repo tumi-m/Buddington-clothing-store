@@ -72,3 +72,40 @@ Locally, use `netlify dev` — plain `npm run dev` has no functions, and the doc
 treats Apple Music as not configured.
 
 `npm test` covers link parsing, PKCE and the token signer.
+
+## Apple Pay
+
+The Apple Pay button appears only when **both** are true: the browser can
+present a sheet (Safari on Apple hardware) and the server reports merchant
+credentials. Everywhere else it is not rendered, so nobody is offered a payment
+method that cannot complete. Card checkout is unaffected.
+
+To enable it:
+
+1. In the Apple Developer portal create a **Merchant ID** and a **Merchant
+   Identity Certificate** for it.
+2. Register each domain the store is served from, download the association
+   file, and serve it at
+   `/.well-known/apple-developer-merchantid-domain-association`
+   (put it in `public/.well-known/` — Vite copies it verbatim).
+3. Set in Netlify's environment:
+   `APPLE_PAY_MERCHANT_ID` (e.g. `merchant.com.buddington`),
+   `APPLE_PAY_MERCHANT_CERT` and `APPLE_PAY_MERCHANT_KEY` (PEM, `\n` escaped),
+   optionally `APPLE_PAY_MERCHANT_KEY_PASSPHRASE` and
+   `APPLE_PAY_DISPLAY_NAME`.
+
+`netlify/functions/apple-pay-merchant-session.mjs` performs the mutual-TLS
+handshake with Apple so the certificate never reaches the browser, and only
+accepts validation URLs on `*.apple.com` — the URL arrives from the client, and
+without that check a crafted one would make the server present the merchant
+certificate to someone else's host.
+
+**Taking money still needs a payment processor.** Authorising the sheet yields
+a payment token; capturing it is `capturePayment()` in
+`src/components/ApplePayButton.tsx`, which currently returns `false`. Until a
+processor (Stripe, Adyen, Braintree…) is wired in there, the sheet correctly
+reports failure rather than showing a tick for a charge that never happened.
+The card form is a demonstration and says so on screen.
+
+Locally, use `netlify dev`; plain `npm run dev` has no functions, so Apple Pay
+reads as not configured.
