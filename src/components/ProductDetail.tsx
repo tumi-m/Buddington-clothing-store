@@ -2,6 +2,7 @@
 // Product detail. Two-column: framed plates left, spec column right.
 // Uses <details> for the spec accordion — accessible, no JS, keyboard-operable.
 
+import { useState } from 'react'
 import type { Product } from '../data/products'
 import { formatPrice } from '../data/products'
 import { useCart } from '../cart/CartContext'
@@ -9,6 +10,8 @@ import { Reveal, WordReveal } from './Motion'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
 import { AssetPlate } from './AssetPlate'
+
+const SIZES = ['XS', 'S', 'M', 'L', 'XL'] as const
 
 export interface ProductDetailProps {
   product: Product
@@ -18,10 +21,27 @@ export interface ProductDetailProps {
 
 export function ProductDetail({ product, onBack, onViewInElements }: ProductDetailProps) {
   const { addItem } = useCart()
-  const addToBag = () => addItem({
-    id: product.id, code: product.code, name: product.name,
-    price: product.price, currency: product.currency, image: product.image ?? '',
-  })
+  const [size, setSize] = useState<string | null>(null)
+  const [error, setError] = useState(false)
+
+  const addToBag = () => {
+    if (!size) {
+      // Don't silently add an unsized garment — say what is missing.
+      setError(true)
+      return
+    }
+    setError(false)
+    addItem({
+      id: product.id, code: product.code, name: product.name,
+      price: product.price, currency: product.currency, image: product.image ?? '',
+      size,
+    })
+  }
+
+  const chooseSize = (s: string) => {
+    setSize(s)
+    setError(false)
+  }
 
   return (
     <>
@@ -100,7 +120,50 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
               {product.description}
             </Reveal>
 
-            <Reveal variant="up" delay={420} className="mt-9 flex flex-wrap items-center gap-3">
+            {/* Size — required before a piece can go in the bag */}
+            <Reveal variant="up" delay={390} className="mt-8">
+              <div className="flex items-baseline justify-between gap-3">
+                <span id="size-label" className="text-[0.9rem] font-medium text-ink">Size</span>
+                <span className="text-[0.8rem] text-mute">
+                  {size ? `Selected: ${size}` : 'Cut oversized — see sizing'}
+                </span>
+              </div>
+              <div
+                role="radiogroup"
+                aria-labelledby="size-label"
+                className="mt-3 flex flex-wrap gap-2"
+              >
+                {SIZES.map(s => {
+                  const active = size === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => chooseSize(s)}
+                      className={`h-11 min-w-[3rem] rounded-full border px-4 text-[0.88rem] transition-all duration-200 focus-visible:outline-accent ${
+                        active
+                          ? 'border-transparent bg-ink font-medium text-paper'
+                          : 'border-hair text-ink hover:border-accent hover:text-accent'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  )
+                })}
+              </div>
+              <p
+                role="alert"
+                className={`mt-2.5 text-[0.82rem] text-signal transition-opacity duration-200 ${
+                  error ? 'opacity-100' : 'h-0 overflow-hidden opacity-0'
+                }`}
+              >
+                Choose a size first.
+              </p>
+            </Reveal>
+
+            <Reveal variant="up" delay={420} className="mt-6 flex flex-wrap items-center gap-3">
               <button onClick={addToBag} className="btn-primary">
                 Add to bag
               </button>

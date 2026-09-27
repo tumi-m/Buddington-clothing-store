@@ -15,6 +15,7 @@ import { Shop } from './components/Shop'
 import { ProductDetail } from './components/ProductDetail'
 import { GhostCapsule } from './components/GhostCapsule'
 import { CartDrawer } from './components/CartDrawer'
+import { AddedToast } from './components/AddedToast'
 import { FlightHUD } from './components/FlightHUD'
 import { useScrollFlight } from './hooks/useScrollFlight'
 import { useScrollChrome } from './hooks/useScrollChrome'
@@ -120,6 +121,17 @@ export default function App() {
     setView(returnView)
   }, [returnView])
 
+  // Escape leaves the immersive view. Without it the only way out is a small
+  // overlay button, which is a trap for keyboard users.
+  useEffect(() => {
+    if (view !== 'experience') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') exitExperience()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [view, exitExperience])
+
   // ── 3D cloth experience view (existing wiring, intact) ────────────────────
   if (view === 'experience') {
     return (
@@ -196,6 +208,7 @@ export default function App() {
         </button>
 
         <CartDrawer />
+        <AddedToast />
       </div>
     )
   }
@@ -205,9 +218,16 @@ export default function App() {
 
   return (
     <div ref={scrollerRef} className="absolute inset-0 overflow-y-auto bg-paper text-ink">
+      {/* Keyboard users can jump the nav straight to the page content. */}
+      <a
+        href="#main"
+        className="sr-only-focusable btn-primary absolute left-4 top-4 z-50"
+      >
+        Skip to content
+      </a>
       <Nav view={view} onNavigate={navigate} />
       {/* `key` restarts the entrance animation on every view change. */}
-      <main key={view} className="view-enter">
+      <main id="main" key={view} className="view-enter">
         {view === 'home' && <Home onNavigate={navigate} />}
         {view === 'shop' && <Shop onOpenProduct={openProduct} onNavigate={navigate} onViewInElements={enterExperience} />}
         {view === 'product' && product && (
@@ -220,6 +240,7 @@ export default function App() {
       </main>
 
       <CartDrawer />
+      <AddedToast />
     </div>
   )
 }

@@ -16,6 +16,17 @@ export interface CartItem {
   currency: string
   image: string
   qty: number
+  /** Chosen size. One product in two sizes is two bag lines. */
+  size?: string
+}
+
+/**
+ * Identity of a bag line. Size is part of it: adding an M and an L of the same
+ * coat must produce two lines, not silently bump one quantity. Every mutation
+ * addresses a line by this key rather than by product id.
+ */
+export function lineKey(item: Pick<CartItem, 'id' | 'size'>): string {
+  return `${item.id}::${item.size ?? ''}`
 }
 
 export interface CartContextValue {
@@ -23,12 +34,18 @@ export interface CartContextValue {
   count: number
   subtotal: number
   isOpen: boolean
+  /** The most recent addition, for the confirmation toast. */
+  justAdded: CartItem | null
+  dismissJustAdded: () => void
   open: () => void
   close: () => void
   toggle: () => void
   addItem: (item: Omit<CartItem, 'qty'>, qty?: number) => void
-  removeItem: (id: string) => void
-  setQty: (id: string, qty: number) => void
+  removeItem: (key: string) => void
+  setQty: (key: string, qty: number) => void
+  /** Assign a size to a line added without one (quick-add). Merges if a line
+   *  for that product/size already exists. */
+  setSize: (key: string, size: string) => void
   clear: () => void
 }
 
@@ -61,6 +78,7 @@ function parseItem(raw: unknown): CartItem | null {
     currency: typeof r.currency === 'string' && r.currency ? r.currency : '£',
     image: typeof r.image === 'string' ? r.image : '',
     qty,
+    size: typeof r.size === 'string' && r.size ? r.size : undefined,
   }
 }
 
@@ -79,47 +97,76 @@ function loadInitial(): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadInitial)
   const [isOpen, setIsOpen] = useState(false)
+  const [justAdded, setJustAdded] = useState<CartItem | null>(null)
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch { /* quota / private mode */ }
   }, [items])
 
+  // The confirmation toast retires itself.
+  useEffect(() => {
+    if (!justAdded) return
+    const id = window.setTimeout(() => setJustAdded(null), 4000)
+    return () => window.clearTimeout(id)
+  }, [justAdded])
+
   const open   = useCallback(() => setIsOpen(true), [])
   const close  = useCallback(() => setIsOpen(false), [])
   const toggle = useCallback(() => setIsOpen(o => !o), [])
+  const dismissJustAdded = useCallback(() => setJustAdded(null), [])
 
   const addItem = useCallback((item: Omit<CartItem, 'qty'>, qty = 1) => {
+    const key = lineKey(item)
     setItems(prev => {
-      const existing = prev.find(i => i.id === item.id)
+      const existing = prev.find(i => lineKey(i) === key)
       if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + qty } : i)
+        return prev.map(i => (lineKey(i) === key ? { ...i, qty: i.qty + qty } : i))
       }
       return [...prev, { ...item, qty }]
     })
-    setIsOpen(true)
+    // Deliberately does NOT open the drawer: yanking a panel over the page on
+    // every add interrupts browsing. The toast confirms it instead.
+    setJustAdded({ ...item, qty })
   }, [])
 
-  const removeItem = useCallback((id: string) => {
-    setItems(prev => prev.filter(i => i.id !== id))
+  const removeItem = useCallback((key: string) => {
+    setItems(prev => prev.filter(i => lineKey(i) !== key))
   }, [])
 
-  const setQty = useCallback((id: string, qty: number) => {
+  const setQty = useCallback((key: string, qty: number) => {
     setItems(prev =>
       qty <= 0
-        ? prev.filter(i => i.id !== id)
-        : prev.map(i => i.id === id ? { ...i, qty } : i)
+        ? prev.filter(i => lineKey(i) !== key)
+        : prev.map(i => (lineKey(i) === key ? { ...i, qty } : i))
     )
   }, [])
 
   const clear = useCallback(() => setItems([]), [])
 
+  const setSize = useCallback((key: string, size: string) => {
+    setItems(prev => {
+      const line = prev.find(i => lineKey(i) === key)
+      if (!line) return prev
+      const merged = lineKey({ id: line.id, size })
+      const twin = prev.find(i => lineKey(i) === merged)
+      if (twin) {
+        // That size is already in the bag — fold the quantities together.
+        return prev
+          .filter(i => lineKey(i) !== key)
+          .map(i => (lineKey(i) === merged ? { ...i, qty: i.qty + line.qty } : i))
+      }
+      return prev.map(i => (lineKey(i) === key ? { ...i, size } : i))
+    })
+  }, [])
+
   const count    = useMemo(() => items.reduce((n, i) => n + i.qty, 0), [items])
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items])
 
   const value = useMemo<CartContextValue>(() => ({
-    items, count, subtotal, isOpen, open, close, toggle,
-    addItem, removeItem, setQty, clear,
-  }), [items, count, subtotal, isOpen, open, close, toggle, addItem, removeItem, setQty, clear])
+    items, count, subtotal, isOpen, justAdded, dismissJustAdded,
+    open, close, toggle, addItem, removeItem, setQty, setSize, clear,
+  }), [items, count, subtotal, isOpen, justAdded, dismissJustAdded,
+       open, close, toggle, addItem, removeItem, setQty, setSize, clear])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

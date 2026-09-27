@@ -6,13 +6,13 @@
 // form, then clears the bag and shows a confirmation.
 
 import { useEffect, useRef, useState } from 'react'
-import { useCart, formatMoney } from '../cart/CartContext'
+import { useCart, formatMoney, lineKey } from '../cart/CartContext'
 import { useDialogFocus } from '../hooks/useDialogFocus'
 
 type Stage = 'bag' | 'checkout' | 'done'
 
 export function CartDrawer() {
-  const { items, count, subtotal, isOpen, close, setQty, removeItem, clear } = useCart()
+  const { items, count, subtotal, isOpen, close, setQty, setSize, removeItem, clear } = useCart()
   const [stage, setStage] = useState<Stage>('bag')
   const panelRef = useRef<HTMLElement>(null)
 
@@ -80,6 +80,7 @@ export function CartDrawer() {
             items={items}
             subtotal={subtotal}
             setQty={setQty}
+            setSize={setSize}
             removeItem={removeItem}
             onCheckout={() => setStage('checkout')}
           />
@@ -103,12 +104,15 @@ export function CartDrawer() {
 interface BagStageProps {
   items: ReturnType<typeof useCart>['items']
   subtotal: number
-  setQty: (id: string, qty: number) => void
-  removeItem: (id: string) => void
+  setQty: (key: string, qty: number) => void
+  setSize: (key: string, size: string) => void
+  removeItem: (key: string) => void
   onCheckout: () => void
 }
 
-function BagStage({ items, subtotal, setQty, removeItem, onCheckout }: BagStageProps) {
+const SIZES = ['XS', 'S', 'M', 'L', 'XL'] as const
+
+function BagStage({ items, subtotal, setQty, setSize, removeItem, onCheckout }: BagStageProps) {
   if (items.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
@@ -122,42 +126,69 @@ function BagStage({ items, subtotal, setQty, removeItem, onCheckout }: BagStageP
   }
 
   const currency = items[0]?.currency ?? '£'
+  const unsized = items.filter(i => !i.size).length
 
   return (
     <>
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
-        {items.map(item => (
-          <div key={item.id} className="flex gap-4">
+        {items.map(item => {
+          const key = lineKey(item)
+          return (
+          <div key={key} className="flex gap-4">
             <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-paper-2">
               <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[0.98rem] font-medium leading-tight text-ink">{item.name}</p>
-              <p className="mt-0.5 font-mono text-[0.68rem] text-mute">{item.code}</p>
+              <p className="mt-0.5 font-mono text-[0.68rem] text-mute">
+                {item.code}{item.size ? ` · Size ${item.size}` : ''}
+              </p>
               <p className="mt-1 text-[0.85rem] text-mute">{formatMoney(item.price, item.currency)}</p>
+
+              {/* A line added by quick-add has no size yet. Ask here rather
+                  than guessing one on the customer's behalf. */}
+              {!item.size && (
+                <div className="mt-2 rounded-lg bg-paper-2 p-2">
+                  <p className="mb-1.5 text-[0.72rem] font-medium text-ink">Choose a size</p>
+                  <div className="flex flex-wrap gap-1">
+                    {SIZES.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setSize(key, s)}
+                        aria-label={`Set size ${s} for ${item.name}`}
+                        className="h-7 min-w-[2rem] rounded-full border border-hair bg-paper px-2 text-[0.72rem] text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-accent"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-2.5 flex items-center justify-between">
                 <div className="flex items-center rounded-full border border-hair">
                   <button
-                    onClick={() => setQty(item.id, item.qty - 1)}
-                    aria-label="Decrease quantity"
+                    onClick={() => setQty(key, item.qty - 1)}
+                    aria-label={`Decrease quantity of ${item.name}`}
                     className="flex h-7 w-7 items-center justify-center rounded-l-full text-mute transition-colors hover:text-ink focus-visible:outline-accent"
                   >−</button>
                   <span className="w-7 text-center font-mono text-[0.75rem] text-ink">{item.qty}</span>
                   <button
-                    onClick={() => setQty(item.id, item.qty + 1)}
-                    aria-label="Increase quantity"
+                    onClick={() => setQty(key, item.qty + 1)}
+                    aria-label={`Increase quantity of ${item.name}`}
                     className="flex h-7 w-7 items-center justify-center rounded-r-full text-mute transition-colors hover:text-ink focus-visible:outline-accent"
                   >+</button>
                 </div>
                 <button
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeItem(key)}
+                  aria-label={`Remove ${item.name} from bag`}
                   className="text-[0.78rem] text-mute transition-colors hover:text-signal focus-visible:outline-accent"
                 >Remove</button>
               </div>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="shrink-0 border-t border-hair px-6 py-5">
@@ -165,11 +196,17 @@ function BagStage({ items, subtotal, setQty, removeItem, onCheckout }: BagStageP
           <span className="text-[0.9rem] text-mute">Subtotal</span>
           <span className="text-[1rem] font-medium text-ink">{formatMoney(subtotal, currency)}</span>
         </div>
-        <button onClick={onCheckout} className="btn-primary w-full py-3">
+        <button
+          onClick={onCheckout}
+          disabled={unsized > 0}
+          className="btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Checkout
         </button>
-        <p className="mt-3 text-center text-[0.75rem] text-mute">
-          Taxes &amp; shipping calculated at checkout
+        <p className="mt-3 text-center text-[0.75rem] text-mute" role="status">
+          {unsized > 0
+            ? `Choose a size for ${unsized} item${unsized === 1 ? '' : 's'} to continue`
+            : 'Taxes & shipping calculated at checkout'}
         </p>
       </div>
     </>

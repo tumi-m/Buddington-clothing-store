@@ -62,13 +62,14 @@ export function Shop({ onOpenProduct, onNavigate, onViewInElements }: ShopProps)
         </Reveal>
 
         {/* Filter chips */}
-        <div className="mt-8 flex flex-wrap gap-2 border-b border-hair pb-6">
+        <div className="mt-8 flex flex-wrap items-center gap-2 border-b border-hair pb-6">
           {FILTERS.map(f => {
             const active = filter === f.key
             return (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
+                aria-pressed={active}
                 className={`rounded-full px-4 py-1.5 text-[0.85rem] transition-colors duration-200 focus-visible:outline-accent ${
                   active
                     ? 'bg-ink font-medium text-paper'
@@ -79,6 +80,10 @@ export function Shop({ onOpenProduct, onNavigate, onViewInElements }: ShopProps)
               </button>
             )
           })}
+          {/* Announced to screen readers when the filter changes. */}
+          <p role="status" className="ml-auto text-[0.82rem] text-mute">
+            {shown.length} {shown.length === 1 ? 'piece' : 'pieces'}
+          </p>
         </div>
 
         {/* Grid */}
