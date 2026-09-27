@@ -33,12 +33,18 @@ const GALE_THRESHOLD = 0.9
 const GALE_HOLD_S = 6
 const STORMPROOF_KEY = 'buddington-stormproof'
 
-function useGaleTrial(windStrength: number) {
+/**
+ * The trial only counts while the viewer is actually driving the fan. The
+ * scripted entry flight pushes wind to 1.0 during chapter IV ("The current"),
+ * which is above the gale threshold — without `armed` the badge would award
+ * itself to anyone who simply watched the intro without touching a control.
+ */
+function useGaleTrial(windStrength: number, armed: boolean) {
   const [earned, setEarned] = useState(() => {
     try { return localStorage.getItem(STORMPROOF_KEY) === '1' } catch { return false }
   })
   const [held, setHeld] = useState(0)
-  const atGale = windStrength >= GALE_THRESHOLD
+  const atGale = armed && windStrength >= GALE_THRESHOLD
 
   useEffect(() => {
     if (earned || !atGale) {
@@ -73,7 +79,7 @@ export function UI({
   const [fanOn, setFanOn] = useState(true)
   const [controlsOpen, setControlsOpen] = useState(false)   // mobile: collapse the control stack
   const { count, open, addItem } = useCart()
-  const trial = useGaleTrial(windStrength)
+  const trial = useGaleTrial(windStrength, !flightActive)
 
   const toggleFan = () => {
     const next = !fanOn
@@ -181,7 +187,7 @@ export function UI({
         data-flight-ignore
         aria-hidden={flightActive}
         className={`absolute right-3 md:right-6 top-16 md:top-auto md:bottom-6 z-40 flex flex-col gap-2 md:gap-3 items-end transition-opacity duration-700 ${
-          flightActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          flightActive ? 'invisible opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
         {/* Mobile toggle */}

@@ -5,14 +5,20 @@
 // Checkout is a self-contained mock (no payment backend) — it validates the
 // form, then clears the bag and shows a confirmation.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCart, formatMoney } from '../cart/CartContext'
+import { useDialogFocus } from '../hooks/useDialogFocus'
 
 type Stage = 'bag' | 'checkout' | 'done'
 
 export function CartDrawer() {
   const { items, count, subtotal, isOpen, close, setQty, removeItem, clear } = useCart()
   const [stage, setStage] = useState<Stage>('bag')
+  const panelRef = useRef<HTMLElement>(null)
+
+  // Focus enters the panel on open, is trapped while open, and returns to the
+  // control that opened it on close.
+  useDialogFocus(panelRef, isOpen)
 
   // Reset to the bag stage whenever the drawer is reopened.
   useEffect(() => { if (isOpen) setStage(s => (s === 'done' ? 'done' : 'bag')) }, [isOpen])
@@ -33,7 +39,7 @@ export function CartDrawer() {
 
   return (
     <div
-      className={`fixed inset-0 z-[60] ${isOpen ? '' : 'pointer-events-none'}`}
+      className={`fixed inset-0 z-[60] ${isOpen ? '' : 'invisible pointer-events-none'}`}
       aria-hidden={!isOpen}
     >
       {/* Backdrop */}
@@ -44,9 +50,12 @@ export function CartDrawer() {
         }`}
       />
 
-      {/* Panel */}
+      {/* Panel. `invisible` on the wrapper (not just opacity) is what keeps the
+          closed drawer's controls out of the keyboard tab order. */}
       <aside
+        ref={panelRef}
         role="dialog"
+        aria-modal="true"
         aria-label="Shopping bag"
         className={`absolute right-0 top-0 flex h-full w-[min(92vw,440px)] flex-col bg-paper text-ink shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'

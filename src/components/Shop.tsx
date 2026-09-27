@@ -159,76 +159,79 @@ function ProductCard({ product, badgeTone, onOpen, onViewInElements }: ProductCa
   }
 
   return (
-    <div className="card card-hover group h-full overflow-hidden">
-      {/* Main hit-area: image + caption open the product detail */}
-      <button type="button" onClick={onOpen} className="w-full text-left">
-        <div className="relative overflow-hidden bg-paper-2">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={`${product.name} — ${product.colorway}`}
-              loading="lazy"
-              decoding="async"
-              className="media-zoom w-full object-cover motion-reduce:transition-none"
-              style={{ aspectRatio: '4/5' }}
-            />
-          ) : (
-            <AssetPlate label={`${product.code} / FRONT`} ratio="4/5" tone="paper" className="w-full" />
-          )}
+    <div className="card card-hover group relative h-full overflow-hidden">
+      {/* Media. The whole card is made clickable by the stretched overlay
+          button below rather than by wrapping everything in a <button>, so the
+          quick-add control is never nested inside another control. */}
+      <div className="relative overflow-hidden bg-paper-2">
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={`${product.name} — ${product.colorway}`}
+            loading="lazy"
+            decoding="async"
+            className="media-zoom w-full object-cover motion-reduce:transition-none"
+            style={{ aspectRatio: '4/5' }}
+          />
+        ) : (
+          <AssetPlate label={`${product.code} / FRONT`} ratio="4/5" tone="paper" className="w-full" />
+        )}
 
-          {badgeTone !== 'none' && product.badge && (
-            <span
-              className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[0.65rem] font-medium ${
-                badgeTone === 'signal'
-                  ? 'bg-signal text-white'
-                  : 'bg-paper/90 text-ink backdrop-blur-sm'
-              }`}
-            >
-              {product.badge === 'LAST PIECE' ? 'Last piece' : 'New'}
-            </span>
-          )}
-
-          {/* Quick add */}
+        {badgeTone !== 'none' && product.badge && (
           <span
-            role="button"
-            tabIndex={0}
-            aria-label={`Add ${product.name} to bag`}
-            onClick={quickAdd}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                quickAdd(e as unknown as React.MouseEvent)
-              }
-            }}
-            className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-paper/95 text-lg font-light leading-none text-ink shadow-card transition-all duration-200 hover:bg-accent hover:text-white focus-visible:opacity-100 focus-visible:outline-accent md:opacity-0 md:group-hover:opacity-100"
+            className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[0.65rem] font-medium ${
+              badgeTone === 'signal'
+                ? 'bg-signal text-white'
+                : 'bg-paper/90 text-ink backdrop-blur-sm'
+            }`}
           >
-            +
+            {product.badge === 'LAST PIECE' ? 'Last piece' : 'New'}
+          </span>
+        )}
+      </div>
+
+      {/* Caption */}
+      <div className="px-5 pb-1 pt-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-[1.02rem] text-ink">
+            {/* The stretched hit-area: covers the card, sits below the sibling
+                controls in z-order so they stay clickable. */}
+            <button
+              type="button"
+              onClick={onOpen}
+              className="text-left after:absolute after:inset-0 after:z-0 after:content-[''] focus-visible:outline-accent"
+            >
+              {product.name}
+            </button>
+          </h2>
+          <span className="shrink-0 text-[0.95rem] font-medium text-ink">
+            {formatPrice(product)}
           </span>
         </div>
-
-        {/* Caption */}
-        <div className="px-5 pb-1 pt-5">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-[1.02rem] text-ink">{product.name}</h2>
-            <span className="shrink-0 text-[0.95rem] font-medium text-ink">
-              {formatPrice(product)}
-            </span>
-          </div>
-          <p className="mt-1 font-mono text-[0.72rem] text-mute">
-            {product.code} · {product.colorway}
-          </p>
-        </div>
-      </button>
+        <p className="mt-1 font-mono text-[0.72rem] text-mute">
+          {product.code} · {product.colorway}
+        </p>
+      </div>
 
       <div className="px-5 pb-5 pt-3">
         <button
           type="button"
           onClick={viewInElements}
-          className="text-[0.85rem] text-accent transition-colors hover:text-accent-deep focus-visible:outline-accent"
+          className="relative z-10 text-[0.85rem] text-accent transition-colors hover:text-accent-deep focus-visible:outline-accent"
         >
           View in the elements →
         </button>
       </div>
+
+      {/* Quick add — a sibling of the hit-area, never a descendant of it */}
+      <button
+        type="button"
+        aria-label={`Add ${product.name} to bag`}
+        onClick={quickAdd}
+        className="absolute bottom-[4.75rem] right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-paper/95 text-lg font-light leading-none text-ink shadow-card transition-all duration-200 hover:bg-accent hover:text-white focus-visible:opacity-100 focus-visible:outline-accent md:opacity-0 md:group-hover:opacity-100"
+      >
+        +
+      </button>
     </div>
   )
 }

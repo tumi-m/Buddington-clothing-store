@@ -36,12 +36,41 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 const STORAGE_KEY = 'buddington-bag'
 
+/**
+ * Coerce one stored row into a valid CartItem, or reject it.
+ *
+ * Stored bags outlive the code that wrote them: a row saved by an older build
+ * (or hand-edited, or half-written) can be missing `price`/`qty`. Those used to
+ * flow straight into `price.toLocaleString()` and throw during render, which
+ * took down the whole app on every load until the user cleared site data.
+ * Anything that cannot be repaired is dropped instead.
+ */
+function parseItem(raw: unknown): CartItem | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const r = raw as Record<string, unknown>
+  const price = Number(r.price)
+  const qty = Math.floor(Number(r.qty))
+  if (typeof r.id !== 'string' || r.id === '') return null
+  if (!Number.isFinite(price) || price < 0) return null
+  if (!Number.isFinite(qty) || qty < 1) return null
+  return {
+    id: r.id,
+    code: typeof r.code === 'string' ? r.code : '',
+    name: typeof r.name === 'string' ? r.name : 'Unknown piece',
+    price,
+    currency: typeof r.currency === 'string' && r.currency ? r.currency : '£',
+    image: typeof r.image === 'string' ? r.image : '',
+    qty,
+  }
+}
+
 function loadInitial(): CartItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.map(parseItem).filter((i): i is CartItem => i !== null)
   } catch {
     return []
   }
@@ -101,7 +130,9 @@ export function useCart(): CartContextValue {
   return ctx
 }
 
-/** Shared currency formatter so every surface prints prices identically. */
+/** Shared currency formatter so every surface prints prices identically.
+ *  Defensive about its input: a price is never worth crashing a render over. */
 export function formatMoney(amount: number, currency = '£'): string {
-  return `${currency} ${amount.toLocaleString('en-GB')}`
+  const n = Number(amount)
+  return `${currency} ${(Number.isFinite(n) ? n : 0).toLocaleString('en-GB')}`
 }
