@@ -12,36 +12,119 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #050505;
+  background: #ffffff;
 }
 
 body {
-  color: #ffffff;
-  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  color: #0d0e12;
+  font-family: 'Inter', system-ui, 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Custom scrollbar — house gold */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f4f1ea; }
-::-webkit-scrollbar-thumb { background: #c9a44c; border-radius: 2px; }
+/* Headings read as a modern product site: tight, dense, sentence-case. */
+h1, h2, h3 {
+  letter-spacing: -0.022em;
+  font-weight: 600;
+}
+
+/* Custom scrollbar — neutral, unobtrusive */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #d7dae0;
+  border-radius: 999px;
+  border: 3px solid #ffffff;
+}
+::-webkit-scrollbar-thumb:hover { background: #bcc1ca; }
 
 /* Hide scrollbars on swipeable strips (garment carousel, mobile nav) while
    keeping them scrollable. */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Editorial reveal motion — restrained, house grammar */
+@layer components {
+  /* Primary call to action — solid accent, soft glow on hover. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5
+           text-[0.9rem] font-medium text-white transition-all duration-200
+           hover:bg-accent-deep hover:shadow-glow focus-visible:outline-accent;
+  }
+  /* Secondary — quiet outline on the white canvas. */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-hair bg-paper
+           px-5 py-2.5 text-[0.9rem] font-medium text-ink transition-all duration-200
+           hover:border-accent hover:text-accent focus-visible:outline-accent;
+  }
+  /* Surface card — the repeating unit of the whole site. */
+  .card {
+    @apply rounded-xl2 border border-hair bg-paper transition-all duration-300;
+  }
+  .card-hover {
+    @apply hover:-translate-y-0.5 hover:border-transparent hover:shadow-lift;
+  }
+  /* Small pill label, e.g. a product code or section eyebrow. */
+  .pill {
+    @apply inline-flex items-center rounded-full border border-hair bg-paper-2
+           px-3 py-1 font-mono text-[0.7rem] text-mute;
+  }
+
+  /* ── Overlay chrome for the 3D experience, which stays dark ───────────── */
+  .glass {
+    @apply rounded-xl border border-white/10 bg-black/55 backdrop-blur-md;
+  }
+  .chip {
+    @apply rounded-full border border-white/15 px-2.5 py-1 text-[0.72rem] text-white/55
+           transition-all duration-200 hover:border-white/30 hover:text-white
+           focus-visible:outline-accent;
+  }
+  .chip-on {
+    @apply border-transparent bg-accent text-white hover:bg-accent-deep hover:text-white;
+  }
+}
+
+/* Reveal motion — restrained, product-site cadence */
 @keyframes buddington-reveal {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
 }
 .reveal {
-  animation: buddington-reveal 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: buddington-reveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Scroll-triggered reveal — added by useReveal (IntersectionObserver) when an
-   element first enters the viewport. Same restrained curve as .reveal. */
+/* ── Scroll-driven reveal system ──────────────────────────────────────────
+   `.rv` is the base: invisible until useReveal adds `.is-inview`. A variant
+   class picks how it arrives. Precise and hard-edged rather than bouncy —
+   one long ease-out, no overshoot. */
+.rv {
+  --rv-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+  opacity: 0;
+  transition:
+    opacity 760ms var(--rv-ease),
+    transform 760ms var(--rv-ease),
+    clip-path 900ms var(--rv-ease),
+    filter 760ms var(--rv-ease);
+  will-change: opacity, transform;
+}
+.rv-up     { transform: translateY(22px); }
+.rv-rise   { transform: translateY(54px); }
+.rv-scale  { transform: scale(0.965); }
+.rv-blur   { filter: blur(10px); transform: translateY(12px); }
+/* Wipe — the shutter opening, the most Yeezy of the set. */
+.rv-wipe   { clip-path: inset(0 0 100% 0); transform: translateY(8px); }
+.rv-wipe-x { clip-path: inset(0 100% 0 0); }
+
+/* The observed host is never the clipped element — see Motion.tsx. */
+.rv-host.is-inview > .rv,
+.rv.is-inview {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: inset(0 0 0 0);
+}
+
+/* Legacy alias — existing markup that uses the original class keeps working. */
 .reveal-scroll {
   opacity: 0;
   transform: translateY(16px);
@@ -54,10 +137,63 @@ body {
   transform: none;
 }
 
+/* ── Marquee ticker — continuous horizontal band ─────────────────────────
+   The track holds the content twice; translating by -50% loops seamlessly. */
+@keyframes buddington-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.marquee-track {
+  display: inline-flex;
+  min-width: 200%;
+  animation: buddington-marquee var(--marquee-duration, 34s) linear infinite;
+}
+.marquee-reverse .marquee-track {
+  animation-direction: reverse;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* ── Scroll progress rail (top of the editorial shell) ───────────────────── */
+.scroll-rail {
+  transform: scaleX(var(--sp, 0));
+  transform-origin: left center;
+}
+
+/* ── Nav condense — the bar tightens once the page leaves the top ───────── */
+.nav-shell {
+  transition:
+    height 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 320ms ease,
+    background-color 320ms ease;
+}
+[data-scrolled='1'] .nav-shell {
+  height: 3.25rem;
+  box-shadow: 0 1px 0 rgba(13, 14, 18, 0.06), 0 8px 24px rgba(13, 14, 18, 0.05);
+}
+
+/* ── View transition — each screen arrives with one short rise ──────────── */
+@keyframes buddington-view-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.view-enter {
+  animation: buddington-view-in 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Hover choreography for cards ────────────────────────────────────────── */
+.media-zoom {
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .media-zoom {
+  transform: scale(1.05);
+}
+
 /* Experience scroll-flight cue — slow restrained pulse */
 @keyframes buddington-cue {
-  0%, 100% { opacity: 0.85; }
-  50%      { opacity: 0.35; }
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 0.4; }
 }
 .flight-cue {
   animation: buddington-cue 2.4s ease-in-out infinite;
@@ -72,15 +208,14 @@ body {
   animation: buddington-drift 24s linear infinite;
 }
 
-/* Accessible focus ring — house gold */
+/* Accessible focus ring — accent blue */
 :focus-visible {
-  outline: 2px solid #c9a44c;
+  outline: 2px solid #4d6bfe;
   outline-offset: 2px;
+  border-radius: 4px;
 }
-
-/* Utility class for consistent gold focus rings on interactive controls */
 .focus-ring:focus-visible {
-  outline: 2px solid #c9a44c;
+  outline: 2px solid #4d6bfe;
   outline-offset: 2px;
 }
 
@@ -88,50 +223,62 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .ghost-drift,
-  .flight-cue {
+  .flight-cue,
+  .view-enter,
+  .marquee-track {
     animation: none !important;
   }
-  .reveal-scroll {
+  .reveal-scroll,
+  .rv {
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }  .scroll-rail {
+    display: none !important;
+  }
+  .nav-shell,
+  .media-zoom {
     transition: none !important;
   }
-  /* Stop group-hover scale via Tailwind motion-reduce utilities in components */
+  .group:hover .media-zoom {
+    transform: none !important;
+  }
+  .card-hover:hover {
+    transform: none !important;
+  }
   * {
     scroll-behavior: auto !important;
   }
-}
-
-/* Editorial reduced motion helper */
-@media (prefers-reduced-motion: reduce) {
   .motion-reduce\:transition-none {
     transition: none !important;
   }
 }
 
-/* Range input styling */
+/* Range input styling — accent track thumb */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  height: 2px;
-  background: #333;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.18);
   outline: none;
-  border-radius: 2px;
+  border-radius: 999px;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #C9A96E;
+  background: #4d6bfe;
   cursor: pointer;
 }
 input[type="range"]::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #C9A96E;
+  background: #4d6bfe;
   cursor: pointer;
   border: none;
 }

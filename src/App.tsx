@@ -3,7 +3,7 @@
 // editorial screens over the existing 3D cloth experience, which remains a
 // reachable view ("EXPERIENCE"). Existing 3D wiring (Scene/UI/InfoPanel) is intact.
 
-import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Scene } from './components/Scene'
@@ -17,6 +17,7 @@ import { GhostCapsule } from './components/GhostCapsule'
 import { CartDrawer } from './components/CartDrawer'
 import { FlightHUD } from './components/FlightHUD'
 import { useScrollFlight } from './hooks/useScrollFlight'
+import { useScrollChrome } from './hooks/useScrollChrome'
 import { getProductById } from './data/products'
 import { GARMENTS } from './data/garments'
 import type { View, Weather, DayNight } from './types'
@@ -36,15 +37,16 @@ const CHAPTER_ELEMENTS: readonly { weather: Weather; wind: number }[] = [
 function Loader() {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-bg z-50">
-      <div
-        className="text-gold text-4xl font-display tracking-ultra-wide mb-4"
-        style={{ textShadow: '0 0 40px rgba(201,169,110,0.5)' }}
-      >
-        BUDDINGTON
+      <div className="flex items-center gap-3 mb-4">
+        <span
+          className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-base font-semibold text-white"
+          aria-hidden="true"
+        >
+          B
+        </span>
+        <span className="text-2xl font-semibold tracking-tight text-white">Buddington</span>
       </div>
-      <div className="text-xs tracking-widest text-gray-600 animate-pulse">
-        LOADING A/W 41 · · ·
-      </div>
+      <div className="text-xs text-gray-500 animate-pulse">Loading A/W 41…</div>
     </div>
   )
 }
@@ -61,6 +63,17 @@ export default function App() {
   const [dayNight, setDayNight] = useState<DayNight>('day')
   const [selectedGarment, setSelectedGarment] = useState<string>(GARMENTS[0].id)
   const [quality, setQuality] = useState<'high' | 'low'>('high')
+
+  // The editorial shell is its own scroll container (the document never
+  // scrolls), so view changes reset this element rather than the window.
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const resetScroll = useCallback(() => {
+    scrollerRef.current?.scrollTo({ top: 0 })
+  }, [])
+
+  // Publishes scroll progress + a scrolled flag onto the container for the
+  // progress rail and the condensing nav to read in CSS.
+  useScrollChrome(scrollerRef)
 
   // Scroll-scrubbed entry flight for the experience view (scroll-world engine).
   // Replays on each entry; skipped entirely under prefers-reduced-motion.
@@ -82,14 +95,15 @@ export default function App() {
   const navigate = useCallback((v: View) => {
     if (view !== 'experience') setReturnView(view)
     setView(v)
-    // Reset scroll on view change for the editorial shell.
-    if (v !== 'experience') window.scrollTo(0, 0)
+    // Reset scroll on view change. The editorial shell scrolls inside its own
+    // container, not the document, so window.scrollTo would do nothing here.
+    if (v !== 'experience') resetScroll()
   }, [view])
 
   const openProduct = useCallback((id: string) => {
     setProductId(id)
     setView('product')
-    window.scrollTo(0, 0)
+    resetScroll()
   }, [])
 
   const enterExperience = useCallback((garmentId?: string) => {
@@ -158,7 +172,7 @@ export default function App() {
           flightActive={!flight.done}
         />
 
-        {/* Scroll-flight HUD — flight log, gold progress hairline, skip. */}
+        {/* Scroll-flight HUD — flight log, accent progress hairline, skip. */}
         <FlightHUD
           progress={flight.progress}
           done={flight.done}
@@ -172,9 +186,9 @@ export default function App() {
         {/* Exit back to the editorial site — overlay, does not alter UI.tsx */}
         <button
           onClick={exitExperience}
-          className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 sm:bottom-auto sm:top-6 sm:left-1/2 sm:-translate-x-1/2 z-50 font-mono uppercase text-[0.6rem] sm:text-[0.65rem] tracking-[0.14em] text-gray-400 hover:text-gold border border-white/10 hover:border-gold px-3 py-2 sm:py-1.5 rounded bg-black/40 backdrop-blur-md transition-colors focus-visible:outline-gold"
+          className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 sm:bottom-auto sm:top-6 sm:left-1/2 sm:-translate-x-1/2 z-50 text-[0.8rem] text-white/70 hover:text-white border border-white/15 hover:border-white/30 px-4 py-2 sm:py-1.5 rounded-full bg-black/40 backdrop-blur-md transition-colors focus-visible:outline-accent"
         >
-          ← EXIT<span className="hidden sm:inline"> TO SITE</span>
+          ← Exit<span className="hidden sm:inline"> to site</span>
         </button>
 
         <CartDrawer />
@@ -186,9 +200,10 @@ export default function App() {
   const product = productId ? getProductById(productId) : undefined
 
   return (
-    <div className="absolute inset-0 overflow-y-auto bg-paper text-ink">
+    <div ref={scrollerRef} className="absolute inset-0 overflow-y-auto bg-paper text-ink">
       <Nav view={view} onNavigate={navigate} />
-      <main>
+      {/* `key` restarts the entrance animation on every view change. */}
+      <main key={view} className="view-enter">
         {view === 'home' && <Home onNavigate={navigate} />}
         {view === 'shop' && <Shop onOpenProduct={openProduct} onNavigate={navigate} onViewInElements={enterExperience} />}
         {view === 'product' && product && (
@@ -207,18 +222,13 @@ export default function App() {
 
 function MissingProduct({ onBack }: { onBack: () => void }) {
   return (
-    <div className="mx-auto max-w-[1600px] px-6 lg:px-12 py-24 text-center">
-      <p className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-gold mb-3">
-        A41 / NOT FOUND
-      </p>
-      <p className="font-serif text-ink mb-6" style={{ fontSize: '1.5rem' }}>
+    <div className="mx-auto max-w-[1200px] px-4 py-24 text-center sm:px-6 lg:px-8">
+      <p className="pill mx-auto">A41 / Not found</p>
+      <p className="mt-5 text-[1.5rem] font-medium text-ink">
         That piece is no longer in the collection.
       </p>
-      <button
-        onClick={onBack}
-        className="font-mono uppercase text-[0.78rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1"
-      >
-        ← THE COLLECTION
+      <button onClick={onBack} className="btn-primary mt-7">
+        Back to the collection
       </button>
     </div>
   )

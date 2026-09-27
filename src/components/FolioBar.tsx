@@ -1,6 +1,6 @@
 // FILE: src/components/FolioBar.tsx
-// Thin folio rule under the nav: [BUDDINGTON / A41] —— [roman] —— [SECTION].
-// House grammar (AGENTS.md). tone="ink" for the GHOST screen.
+// Thin section rule under the nav: breadcrumb-style [Buddington / A41] · [SECTION].
+// tone="ink" for the GHOST screen, which keeps a dark surface.
 
 export interface FolioBarProps {
   roman: string
@@ -10,14 +10,16 @@ export interface FolioBarProps {
 
 export function FolioBar({ roman, section, tone = 'paper' }: FolioBarProps) {
   const ink = tone === 'ink'
-  const txt = ink ? 'text-gold/80' : 'text-mute'
-  const rule = ink ? 'border-gold/20' : 'border-hair'
+  const txt = ink ? 'text-paper/50' : 'text-mute'
+  const strong = ink ? 'text-paper/80' : 'text-ink'
   return (
-    <div className={`mx-auto max-w-[1600px] px-6 lg:px-12 border-b ${rule}`}>
-      <div className={`flex items-center justify-between py-2 font-mono uppercase text-[0.62rem] tracking-[0.14em] ${txt}`}>
-        <span>BUDDINGTON / A41</span>
-        <span>—— {roman} ——</span>
-        <span>{section}</span>
+    <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+      <div className={`flex items-center gap-2 py-3 font-mono text-[0.68rem] ${txt}`}>
+        <span>Buddington / A41</span>
+        <span aria-hidden="true">·</span>
+        <span>{roman}</span>
+        <span aria-hidden="true">·</span>
+        <span className={strong}>{section}</span>
       </div>
     </div>
   )

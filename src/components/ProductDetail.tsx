@@ -1,10 +1,11 @@
 // FILE: src/components/ProductDetail.tsx
-// Product detail (specs/DESIGN.md §Product detail). Sacred Red: none.
+// Product detail. Two-column: framed plates left, spec column right.
 // Uses <details> for the spec accordion — accessible, no JS, keyboard-operable.
 
 import type { Product } from '../data/products'
 import { formatPrice } from '../data/products'
 import { useCart } from '../cart/CartContext'
+import { Reveal, WordReveal } from './Motion'
 import { FolioBar } from './FolioBar'
 import { FolioFooter } from './FolioFooter'
 import { AssetPlate } from './AssetPlate'
@@ -21,98 +22,111 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
     id: product.id, code: product.code, name: product.name,
     price: product.price, currency: product.currency, image: product.image ?? '',
   })
+
   return (
     <>
-      <FolioBar roman="III" section="PRODUCT" />
+      <FolioBar roman="III" section="Product" />
 
-      <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-8">
-      <button
-        onClick={onBack}
-        className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-mute hover:text-ink transition-colors mb-8 focus-visible:outline-gold"
-      >
-        ← THE COLLECTION
-      </button>
+      <section className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8">
+        <button
+          onClick={onBack}
+          className="mb-8 text-[0.85rem] text-mute transition-colors hover:text-ink focus-visible:outline-accent"
+        >
+          ← Back to the collection
+        </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
-          {/* Left: image stack (front + back) — borderless, bleed to edge */}
-          <div className="flex flex-col gap-8 lg:sticky lg:top-28 lg:self-start">
-            {product.image ? (
-              <img
-                src={product.image}
-                alt={`${product.name} — front`}
-                loading="eager"
-                decoding="sync"
-                className="w-full object-cover"
-                style={{ aspectRatio: '4/5' }}
-              />
-            ) : (
-              <AssetPlate label={`${product.code} / FRONT`} ratio="4/5" tone="paper" className="w-full" />
-            )}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-14">
+          {/* Left: plates */}
+          <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start">
+            <Reveal variant="wipe" className="card group overflow-hidden bg-paper-2">
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={`${product.name} — front`}
+                  loading="eager"
+                  decoding="sync"
+                  className="media-zoom w-full object-cover"
+                  style={{ aspectRatio: '4/5' }}
+                />
+              ) : (
+                <AssetPlate label={`${product.code} / FRONT`} ratio="4/5" tone="paper" className="w-full" />
+              )}
+            </Reveal>
             {/* Back plate — always AssetPlate until a back photo exists */}
-            <AssetPlate label={`${product.code} / BACK`} ratio="4/5" tone="paper" className="w-full" />
+            <Reveal variant="wipe" delay={140} className="card overflow-hidden">
+              <AssetPlate label={`${product.code} / BACK`} ratio="4/5" tone="paper" className="w-full" />
+            </Reveal>
           </div>
 
           {/* Right: details */}
           <div className="flex flex-col">
-            <p className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-gold mb-3">
-              {product.code}
-            </p>
-            <h1
-              className="font-serif font-semibold text-ink leading-[1.02]"
-              style={{ fontSize: 'clamp(2rem, 4vw, 4rem)' }}
-            >
-              {product.name}
-            </h1>
-            <p className="font-mono text-gold mt-4" style={{ fontSize: '1.5rem' }}>
+            <Reveal variant="up" className="flex flex-wrap items-center gap-2">
+              <span className="pill">{product.code}</span>
+              {product.badge && (
+                <span
+                  className={`rounded-full px-3 py-1 text-[0.7rem] font-medium ${
+                    product.badge === 'LAST PIECE'
+                      ? 'bg-signal/10 text-signal'
+                      : 'bg-accent/10 text-accent'
+                  }`}
+                >
+                  {product.badge === 'LAST PIECE' ? 'Last piece' : 'New'}
+                </span>
+              )}
+            </Reveal>
+
+            <WordReveal
+              as="h1"
+              text={product.name}
+              stagger={80}
+              delay={120}
+              className="mt-5 block text-ink"
+              style={{ fontSize: 'clamp(2rem, 4vw, 3.25rem)', lineHeight: 1.06 }}
+            />
+
+            <Reveal as="p" variant="up" delay={240} className="mt-4 text-[1.6rem] font-medium text-ink">
               {formatPrice(product)}
-            </p>
-            <p className="font-mono uppercase text-mute mt-3 tracking-[0.14em]" style={{ fontSize: '0.7rem' }}>
+            </Reveal>
+            <Reveal as="p" variant="up" delay={290} className="mt-1.5 text-[0.9rem] text-mute">
               {product.colorway}
-            </p>
+            </Reveal>
 
-            <p className="font-serif text-ink/80 mt-6 max-w-[28rem] leading-relaxed" style={{ fontSize: '1.12rem' }}>
+            <Reveal
+              as="p"
+              variant="up"
+              delay={350}
+              className="mt-6 max-w-[34rem] text-[1.02rem] leading-relaxed text-mute"
+            >
               {product.description}
-            </p>
+            </Reveal>
 
-            {product.badge && (
-              <p className="font-mono uppercase text-mute mt-4 tracking-[0.14em]" style={{ fontSize: '0.7rem' }}>
-                {product.badge}
-              </p>
-            )}
-
-            <hr className="border-hair my-7" />
-
-            <div className="flex flex-wrap items-center gap-6">
-              <button
-                onClick={addToBag}
-                className="self-start font-mono uppercase text-[0.78rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
-              >
-                ADD TO BAG →
+            <Reveal variant="up" delay={420} className="mt-9 flex flex-wrap items-center gap-3">
+              <button onClick={addToBag} className="btn-primary">
+                Add to bag
               </button>
-              <button
-                onClick={() => onViewInElements(product.id)}
-                className="font-mono uppercase text-[0.78rem] tracking-[0.14em] text-mute hover:text-gold border-b border-transparent hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
-              >
-                VIEW IN THE ELEMENTS →
+              <button onClick={() => onViewInElements(product.id)} className="btn-secondary">
+                View in the elements
               </button>
-            </div>
+            </Reveal>
 
-            {/* Spec accordion — hair-rule dividers, accessible <details> */}
+            <Reveal as="p" variant="up" delay={480} className="mt-4 text-[0.82rem] text-mute">
+              Free returns within 30 days · Ships from Cape Town
+            </Reveal>
+
+            {/* Spec accordion */}
             <div className="mt-10 border-t border-hair">
-              {SPECS.map(s => (
-                <details key={s.label} className="group border-b border-hair">
-                  <summary className="flex items-center justify-between py-3 cursor-pointer list-none focus-visible:outline-gold rounded-sm">
-                    <span className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-ink">
-                      {s.label}
-                    </span>
-                    <span className="font-mono text-mute group-open:rotate-45 transition-transform duration-300">
-                      +
-                    </span>
-                  </summary>
-                  <p className="font-serif text-mute pb-4 leading-relaxed" style={{ fontSize: '1rem' }}>
-                    {s.body}
-                  </p>
-                </details>
+              {SPECS.map((s, i) => (
+                <Reveal key={s.label} variant="up" delay={i * 90}>
+                  <details className="group border-b border-hair">
+                    <summary className="flex cursor-pointer list-none items-center justify-between py-4 focus-visible:outline-accent">
+                      <span className="text-[0.95rem] font-medium text-ink">{s.label}</span>
+                      <span className="text-mute transition-transform duration-300 group-open:rotate-45">
+                        +
+                      </span>
+                    </summary>
+                    <p className="pb-5 text-[0.92rem] leading-relaxed text-mute">{s.body}</p>
+                  </details>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -125,7 +139,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
 }
 
 const SPECS: { label: string; body: string }[] = [
-  { label: 'COMPOSITION', body: 'Primary: virgin wool melton. Lining: cupro. Trim: rayon thread, blind-stitched.' },
-  { label: 'CARE', body: 'Do not wash. Professional dry-clean only. Steam to refresh. Store on a broad hanger.' },
-  { label: 'SIZING', body: 'Cut oversized. Model wears M (height 188cm). Drop shoulder; consult the Buddington size chart.' },
+  { label: 'Composition', body: 'Primary: virgin wool melton. Lining: cupro. Trim: rayon thread, blind-stitched.' },
+  { label: 'Care', body: 'Do not wash. Professional dry-clean only. Steam to refresh. Store on a broad hanger.' },
+  { label: 'Sizing', body: 'Cut oversized. Model wears M (height 188cm). Drop shoulder; consult the Buddington size chart.' },
 ]

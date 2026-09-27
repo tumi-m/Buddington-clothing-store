@@ -26,10 +26,10 @@ export function AssetPlate({
   className = '',
 }: AssetPlateProps) {
   const isPaper = tone === 'paper'
-  const surface = isPaper ? 'bg-paper-2 border border-hair' : 'bg-ink border border-gold-dark'
+  const surface = isPaper ? 'bg-paper-2' : 'bg-dark-card border border-white/10'
   const labelColor = isPaper ? 'text-mute' : 'text-paper/70'
-  const tagColor   = isPaper ? 'text-mute' : 'text-gold/70'
-  const crossStroke = isPaper ? '#d4cdbd' : '#927327'
+  const tagColor   = isPaper ? 'text-mute/70' : 'text-accent/70'
+  const crossStroke = isPaper ? '#d7dae0' : '#4d6bfe'
 
   return (
     <div
@@ -49,11 +49,11 @@ export function AssetPlate({
         <line x1="100" y1="0" x2="0" y2="100" stroke={crossStroke} strokeWidth="0.3" opacity="0.5" />
       </svg>
 
-      {/* Centered JetBrains Mono label */}
+      {/* Centered label */}
       <div className="absolute inset-0 flex items-center justify-center px-3 text-center">
         <span
-          className={`font-mono uppercase ${labelColor}`}
-          style={{ fontSize: '0.7rem', letterSpacing: '0.14em' }}
+          className={`font-mono ${labelColor}`}
+          style={{ fontSize: '0.72rem' }}
         >
           {label}
         </span>
@@ -61,10 +61,10 @@ export function AssetPlate({
 
       {/* Bottom-right micro tag */}
       <span
-        className={`absolute bottom-2 right-2 font-mono uppercase ${tagColor}`}
-        style={{ fontSize: '0.55rem', letterSpacing: '0.14em' }}
+        className={`absolute bottom-2 right-2 font-mono ${tagColor}`}
+        style={{ fontSize: '0.58rem' }}
       >
-        BUDDINGTON / PLATE
+        Buddington / plate
       </span>
     </div>
   )

@@ -5,12 +5,12 @@ interface InfoPanelProps {
 export function InfoPanel({ onClose }: InfoPanelProps) {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div className="pointer-events-auto bg-black/85 backdrop-blur-xl border border-white/10 rounded-sm p-8 max-w-lg w-full mx-6">
+      <div className="pointer-events-auto bg-black/85 backdrop-blur-xl border border-white/10 rounded-xl2 p-8 max-w-lg w-full mx-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <div className="text-xs tracking-widest text-gold mb-1">TECHNOLOGY</div>
-            <h2 className="text-xl font-display tracking-widest text-white">HOW IT WORKS</h2>
+            <div className="text-xs tracking-widest text-accent mb-1">TECHNOLOGY</div>
+            <h2 className="text-xl font-semibold tracking-tight text-white">HOW IT WORKS</h2>
           </div>
           <button
             onClick={onClose}
@@ -35,7 +35,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
           <TechItem
             label="Store Texture"
             detail="The Buddington store UI is drawn directly to an HTML Canvas 2D context and uploaded as a CanvasTexture each frame. Zero external dependencies."
-            color="text-gold"
+            color="text-accent"
           />
           <TechItem
             label="Experimental: HTML-in-Canvas"
@@ -51,7 +51,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
 
         {/* Chrome flag instructions */}
         <div className="bg-white/5 border border-white/[0.08] rounded p-4 mb-6">
-          <div className="text-xs tracking-widest text-gold mb-2">ENABLE EXPERIMENTAL HTML TEXTURE</div>
+          <div className="text-xs tracking-widest text-accent mb-2">ENABLE EXPERIMENTAL HTML TEXTURE</div>
           <ol className="text-xs text-gray-400 space-y-1 list-decimal list-inside">
             <li>Open Chrome and navigate to <code className="text-green-400">chrome://flags</code></li>
             <li>Search for <code className="text-green-400">canvas-draw-element</code></li>

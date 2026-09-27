@@ -102,18 +102,23 @@ export function UI({
     <>
       {/* ── Brand wordmark (top-left) ─────────────────────────────────────── */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 pointer-events-none select-none">
-        <div
-          className="text-gold tracking-[0.35em] sm:tracking-ultra-wide text-lg sm:text-2xl font-serif leading-none"
-          style={{ textShadow: '0 0 30px rgba(201,169,110,0.4)' }}
-        >
-          BUDDINGTON
+        <div className="flex items-center gap-2.5">
+          <span
+            className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-[0.8rem] font-semibold text-white"
+            aria-hidden="true"
+          >
+            B
+          </span>
+          <span className="text-[1.05rem] font-semibold tracking-tight text-white">
+            Buddington
+          </span>
         </div>
-        <div className="hidden sm:block text-xs tracking-widest text-gray-600 mt-1 font-light">
-          A/W 41 · IN THE ELEMENTS
+        <div className="hidden sm:block text-[0.78rem] text-white/45 mt-1.5">
+          A/W 41 · In the elements
         </div>
         {trial.earned && (
-          <div className="text-[10px] tracking-widest text-gold mt-1 font-light">
-            ✦ STORMPROOF
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-2.5 py-1 text-[0.7rem] font-medium text-accent ring-1 ring-inset ring-accent/30">
+            ✦ Stormproof
           </div>
         )}
       </div>
@@ -125,7 +130,7 @@ export function UI({
             type="button"
             aria-label="Previous garment"
             onClick={() => step(-1)}
-            className="group absolute left-1 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-16 flex items-center justify-center text-paper/45 hover:text-gold transition-colors focus-visible:outline-gold"
+            className="group absolute left-1 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-16 flex items-center justify-center text-paper/45 hover:text-accent transition-colors focus-visible:outline-accent"
           >
             <span className="text-3xl sm:text-4xl font-thin leading-none group-active:-translate-x-1 transition-transform">❮</span>
           </button>
@@ -133,7 +138,7 @@ export function UI({
             type="button"
             aria-label="Next garment"
             onClick={() => step(1)}
-            className="group absolute right-1 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-16 flex items-center justify-center text-paper/45 hover:text-gold transition-colors focus-visible:outline-gold"
+            className="group absolute right-1 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-16 flex items-center justify-center text-paper/45 hover:text-accent transition-colors focus-visible:outline-accent"
           >
             <span className="text-3xl sm:text-4xl font-thin leading-none group-active:translate-x-1 transition-transform">❯</span>
           </button>
@@ -143,13 +148,13 @@ export function UI({
       {/* ── Active piece — code / price / add (above the carousel) ─────────── */}
       {current && (
         <div data-flight-ignore className="absolute left-1/2 -translate-x-1/2 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] sm:bottom-[7.5rem] z-30 flex flex-col items-center gap-1.5 select-none pointer-events-none">
-          <p className="font-mono uppercase text-[0.7rem] tracking-[0.2em] text-paper">{current.code}</p>
-          <p className="font-mono text-gold text-[0.8rem]">{current.price}</p>
+          <p className="font-mono text-[0.7rem] text-white/70">{current.code}</p>
+          <p className="text-[0.95rem] font-medium text-white">{current.price}</p>
           <button
             type="button"
             onClick={addCurrent}
             aria-label={`Add ${current.code} to bag`}
-            className="pointer-events-auto mt-0.5 w-9 h-9 flex items-center justify-center text-2xl font-thin leading-none text-paper border border-paper/30 rounded-full hover:bg-paper hover:text-black transition-colors focus-visible:outline-gold"
+            className="pointer-events-auto mt-1 w-9 h-9 flex items-center justify-center text-2xl font-thin leading-none text-white border border-white/25 rounded-full hover:bg-accent hover:border-accent hover:text-white transition-colors focus-visible:outline-accent"
           >
             +
           </button>
@@ -184,22 +189,22 @@ export function UI({
           type="button"
           onClick={() => setControlsOpen(o => !o)}
           aria-expanded={controlsOpen}
-          className="md:hidden bg-black/60 backdrop-blur-md border border-white/10 rounded px-3 py-1.5 text-[10px] tracking-widest text-gold uppercase"
+          className="md:hidden glass px-3.5 py-2 text-[0.78rem] font-medium text-white"
         >
-          {controlsOpen ? '✕ CLOSE' : '⚙ CONTROLS'}
+          {controlsOpen ? '✕ Close' : '⚙ Controls'}
         </button>
 
         <div className={`${controlsOpen ? 'flex' : 'hidden'} md:flex flex-col gap-2 md:gap-3 items-end`}>
           {/* Quality toggle */}
           {onQualityChange && quality && (
-            <div className="bg-black/55 backdrop-blur-md border border-white/10 rounded px-4 py-2">
+            <div className="glass px-4 py-3 w-[210px]">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] tracking-widest text-gray-400 font-light uppercase">Quality</span>
+                <span className="text-[0.78rem] text-white/55">Quality</span>
                 <button
                   onClick={() => onQualityChange(quality === 'high' ? 'low' : 'high')}
-                  className="text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 border-gold text-gold hover:bg-gold hover:text-black"
+                  className="chip chip-on"
                 >
-                  {quality === 'high' ? 'HIGH' : 'LOW'}
+                  {quality === 'high' ? 'High' : 'Low'}
                 </button>
               </div>
             </div>
@@ -207,15 +212,12 @@ export function UI({
 
           {/* Weather selector + day/night */}
           {onWeatherChange && weather && (
-            <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 w-[210px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Weather</span>
+            <div className="glass px-4 py-3 w-[210px]">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[0.78rem] text-white/55">Weather</span>
                 {onDayNightToggle && dayNight && (
-                  <button
-                    onClick={onDayNightToggle}
-                    className="text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 border-gold text-gold hover:bg-gold hover:text-black"
-                  >
-                    {dayNight === 'day' ? '☀ DAY' : '☾ NIGHT'}
+                  <button onClick={onDayNightToggle} className="chip chip-on">
+                    {dayNight === 'day' ? '☀ Day' : '☾ Night'}
                   </button>
                 )}
               </div>
@@ -224,13 +226,9 @@ export function UI({
                   <button
                     key={w}
                     onClick={() => onWeatherChange(w)}
-                    className={`text-[10px] tracking-wider px-2 py-0.5 border rounded transition-all duration-200 ${
-                      weather === w
-                        ? 'border-gold text-gold'
-                        : 'border-gray-700 text-gray-500 hover:text-gray-300'
-                    }`}
+                    className={`chip ${weather === w ? 'chip-on' : ''}`}
                   >
-                    {w.toUpperCase()}
+                    {w.charAt(0).toUpperCase() + w.slice(1)}
                   </button>
                 ))}
               </div>
@@ -238,16 +236,11 @@ export function UI({
           )}
 
           {/* Wind / fan control */}
-          <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 w-[200px]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs tracking-widest text-gray-400 font-light uppercase">Fan</span>
-              <button
-                onClick={toggleFan}
-                className={`text-xs tracking-wider px-2 py-0.5 border rounded transition-all duration-200 ${
-                  fanOn ? 'border-gold text-gold' : 'border-gray-700 text-gray-600'
-                }`}
-              >
-                {fanOn ? 'ON' : 'OFF'}
+          <div className="glass px-4 py-3 w-[210px]">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[0.78rem] text-white/55">Fan</span>
+              <button onClick={toggleFan} className={`chip ${fanOn ? 'chip-on' : ''}`}>
+                {fanOn ? 'On' : 'Off'}
               </button>
             </div>
             <input
@@ -263,29 +256,37 @@ export function UI({
               }}
               className="w-full"
             />
-            <div className="flex justify-between mt-1">
-              <span className="text-xs text-gray-700">calm</span>
-              <span className="text-xs text-gray-700">gale</span>
+            <div className="flex justify-between mt-1.5">
+              <span className="text-[0.7rem] text-white/30">calm</span>
+              <span className="text-[0.7rem] text-white/30">gale</span>
             </div>
           </div>
 
           {/* Gale Trial — gamified use of the fan physics */}
-          <div className="bg-black/55 backdrop-blur-md border border-white/[0.08] rounded px-4 py-3 w-[200px]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] tracking-widest text-gray-400 font-light uppercase">Gale Trial</span>
-              <span className={`text-[10px] tracking-wider uppercase ${trial.earned ? 'text-gold' : trial.atGale ? 'text-gold' : 'text-gray-600'}`}>
-                {trial.earned ? '✦ STORMPROOF' : trial.atGale ? `${trial.held.toFixed(1)}S / ${GALE_HOLD_S}S` : 'LOCKED'}
+          <div className="glass px-4 py-3 w-[210px]">
+            <div className="flex items-center justify-between mb-2.5 gap-2">
+              <span className="text-[0.78rem] text-white/55">Gale trial</span>
+              <span
+                className={`text-[0.72rem] font-medium ${
+                  trial.earned || trial.atGale ? 'text-accent' : 'text-white/35'
+                }`}
+              >
+                {trial.earned
+                  ? '✦ Stormproof'
+                  : trial.atGale
+                    ? `${trial.held.toFixed(1)}s / ${GALE_HOLD_S}s`
+                    : 'Locked'}
               </span>
             </div>
-            <div className="relative h-px bg-white/10 overflow-hidden">
+            <div className="relative h-1 overflow-hidden rounded-full bg-white/10">
               <div
-                className="absolute inset-y-0 left-0 bg-gold"
+                className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-150"
                 style={{ width: `${(trial.earned ? 1 : trial.held / GALE_HOLD_S) * 100}%` }}
               />
             </div>
             {!trial.earned && (
-              <p className="text-[9px] text-gray-600 mt-2 leading-relaxed">
-                Hold the fan at gale for {GALE_HOLD_S}s — keep the garment flying to earn the STORMPROOF stamp.
+              <p className="mt-2.5 text-[0.7rem] leading-relaxed text-white/35">
+                Hold the fan at gale for {GALE_HOLD_S}s to earn the Stormproof badge.
               </p>
             )}
           </div>
@@ -293,33 +294,33 @@ export function UI({
           {/* Info toggle */}
           <button
             onClick={onInfoToggle}
-            className="text-xs tracking-widest border border-white/10 text-gray-500 px-3 py-1.5 rounded hover:border-gold hover:text-gold transition-all duration-200 bg-black/40 backdrop-blur-md"
+            className="glass px-3.5 py-2 text-[0.78rem] text-white/60 transition-colors hover:text-white"
           >
-            {showInfo ? 'CLOSE INFO' : 'TECH INFO'}
+            {showInfo ? 'Close info' : 'Tech info'}
           </button>
         </div>
       </div>
 
       {/* ── Top-right: nav + bag ─────────────────────────────────────────── */}
-      <div className="absolute top-4 right-3 sm:top-6 sm:right-6 flex gap-4 sm:gap-6 items-center">
+      <div className="absolute top-4 right-3 sm:top-6 sm:right-6 flex gap-2 sm:gap-3 items-center">
         {([
-          { label: 'COLLECTION', view: 'shop' as View },
-          { label: 'LOOKBOOK',    view: 'ghost' as View },
+          { label: 'Collection', view: 'shop' as View },
+          { label: 'Lookbook',   view: 'ghost' as View },
         ]).map(item => (
           <button
             key={item.label}
             onClick={() => onNavigate?.(item.view)}
             disabled={!onNavigate}
-            className="hidden sm:inline text-xs tracking-widest text-gray-600 hover:text-gold transition-colors duration-200 font-light disabled:cursor-default disabled:hover:text-gray-600"
+            className="hidden sm:inline rounded-full px-3 py-1.5 text-[0.85rem] text-white/60 transition-colors duration-200 hover:bg-white/10 hover:text-white disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-white/60"
           >
             {item.label}
           </button>
         ))}
         <button
           onClick={open}
-          className="text-[0.65rem] sm:text-xs tracking-widest border border-gold text-gold px-3 sm:px-4 py-1.5 hover:bg-gold hover:text-black transition-all duration-200"
+          className="btn-primary px-4 py-1.5 text-[0.85rem]"
         >
-          BAG{count > 0 ? ` · ${count}` : ''}
+          Bag{count > 0 ? ` · ${count}` : ''}
         </button>
       </div>
     </>

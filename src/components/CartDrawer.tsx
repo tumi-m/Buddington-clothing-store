@@ -1,7 +1,7 @@
 // FILE: src/components/CartDrawer.tsx
 // Global bag drawer + checkout flow. Rendered once at the app root so it floats
-// above every view (editorial screens and the 3D experience). House grammar:
-// paper ground, ink type, JetBrains Mono labels, 1px hair rules, gold accents.
+// above every view (editorial screens and the 3D experience). Product-site
+// grammar: white ground, rounded fields, one accent CTA.
 // Checkout is a self-contained mock (no payment backend) — it validates the
 // form, then clears the bag and shows a confirmation.
 
@@ -39,7 +39,7 @@ export function CartDrawer() {
       {/* Backdrop */}
       <div
         onClick={handleClose}
-        className={`absolute inset-0 bg-ink/40 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-ink/40 backdrop-blur-[3px] transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -48,19 +48,19 @@ export function CartDrawer() {
       <aside
         role="dialog"
         aria-label="Shopping bag"
-        className={`absolute top-0 right-0 h-full w-[min(92vw,440px)] bg-paper text-ink flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`absolute right-0 top-0 flex h-full w-[min(92vw,440px)] flex-col bg-paper text-ink shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 h-16 border-b border-hair shrink-0">
-          <span className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-ink">
-            {stage === 'checkout' ? 'CHECKOUT' : stage === 'done' ? 'ORDER PLACED' : `BAG · ${count}`}
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-hair px-6">
+          <span className="text-[0.95rem] font-medium text-ink">
+            {stage === 'checkout' ? 'Checkout' : stage === 'done' ? 'Order placed' : `Bag · ${count}`}
           </span>
           <button
             onClick={handleClose}
             aria-label="Close bag"
-            className="font-mono text-lg leading-none text-mute hover:text-ink transition-colors focus-visible:outline-gold"
+            className="grid h-8 w-8 place-items-center rounded-full text-lg leading-none text-mute transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-accent"
           >
             ✕
           </button>
@@ -102,10 +102,12 @@ interface BagStageProps {
 function BagStage({ items, subtotal, setQty, removeItem, onCheckout }: BagStageProps) {
   if (items.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-3">
-        <p className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-gold">A41 / EMPTY</p>
-        <p className="font-serif text-ink" style={{ fontSize: '1.4rem' }}>Your bag is empty.</p>
-        <p className="font-mono text-mute text-[0.72rem] tracking-wide">Add a piece to begin.</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
+        <div className="grid h-12 w-12 place-items-center rounded-full bg-paper-2 text-xl" aria-hidden="true">
+          ⌀
+        </div>
+        <p className="text-[1.15rem] font-medium text-ink">Your bag is empty</p>
+        <p className="text-[0.88rem] text-mute">Add a piece to begin.</p>
       </div>
     )
   }
@@ -114,54 +116,51 @@ function BagStage({ items, subtotal, setQty, removeItem, onCheckout }: BagStageP
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
         {items.map(item => (
           <div key={item.id} className="flex gap-4">
-            <div className="w-16 h-20 shrink-0 overflow-hidden bg-paper-2">
-              <img src={item.image} alt="" className="w-full h-full object-cover" loading="lazy" />
+            <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-paper-2">
+              <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-mono uppercase text-[0.6rem] tracking-[0.14em] text-gold">{item.code}</p>
-              <p className="font-serif text-ink leading-tight truncate" style={{ fontSize: '1rem' }}>{item.name}</p>
-              <p className="font-mono text-mute text-[0.72rem] mt-0.5">{formatMoney(item.price, item.currency)}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[0.98rem] font-medium leading-tight text-ink">{item.name}</p>
+              <p className="mt-0.5 font-mono text-[0.68rem] text-mute">{item.code}</p>
+              <p className="mt-1 text-[0.85rem] text-mute">{formatMoney(item.price, item.currency)}</p>
 
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center border border-hair">
+              <div className="mt-2.5 flex items-center justify-between">
+                <div className="flex items-center rounded-full border border-hair">
                   <button
                     onClick={() => setQty(item.id, item.qty - 1)}
                     aria-label="Decrease quantity"
-                    className="w-7 h-7 flex items-center justify-center text-mute hover:text-ink transition-colors focus-visible:outline-gold"
+                    className="flex h-7 w-7 items-center justify-center rounded-l-full text-mute transition-colors hover:text-ink focus-visible:outline-accent"
                   >−</button>
-                  <span className="w-7 text-center font-mono text-[0.72rem] text-ink">{item.qty}</span>
+                  <span className="w-7 text-center font-mono text-[0.75rem] text-ink">{item.qty}</span>
                   <button
                     onClick={() => setQty(item.id, item.qty + 1)}
                     aria-label="Increase quantity"
-                    className="w-7 h-7 flex items-center justify-center text-mute hover:text-ink transition-colors focus-visible:outline-gold"
+                    className="flex h-7 w-7 items-center justify-center rounded-r-full text-mute transition-colors hover:text-ink focus-visible:outline-accent"
                   >+</button>
                 </div>
                 <button
                   onClick={() => removeItem(item.id)}
-                  className="font-mono uppercase text-[0.6rem] tracking-[0.14em] text-mute hover:text-signal transition-colors focus-visible:outline-gold"
-                >REMOVE</button>
+                  className="text-[0.78rem] text-mute transition-colors hover:text-signal focus-visible:outline-accent"
+                >Remove</button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="border-t border-hair px-6 py-5 shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-mute">Subtotal</span>
-          <span className="font-mono text-ink text-[0.95rem]">{formatMoney(subtotal, currency)}</span>
+      <div className="shrink-0 border-t border-hair px-6 py-5">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-[0.9rem] text-mute">Subtotal</span>
+          <span className="text-[1rem] font-medium text-ink">{formatMoney(subtotal, currency)}</span>
         </div>
-        <button
-          onClick={onCheckout}
-          className="w-full h-12 bg-ink text-paper font-mono uppercase text-[0.72rem] tracking-[0.14em] hover:bg-gold hover:text-ink transition-colors focus-visible:outline-gold"
-        >
-          CHECKOUT
+        <button onClick={onCheckout} className="btn-primary w-full py-3">
+          Checkout
         </button>
-        <p className="font-mono text-mute text-[0.6rem] tracking-wide text-center mt-3">
-          Taxes & shipping calculated at checkout
+        <p className="mt-3 text-center text-[0.75rem] text-mute">
+          Taxes &amp; shipping calculated at checkout
         </p>
       </div>
     </>
@@ -180,13 +179,13 @@ function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBac
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0">
-      <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-        <Fieldset legend="CONTACT">
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+        <Fieldset legend="Contact">
           <Field label="Email" type="email" name="email" autoComplete="email" required />
         </Fieldset>
 
-        <Fieldset legend="SHIPPING">
+        <Fieldset legend="Shipping">
           <div className="grid grid-cols-2 gap-3">
             <Field label="First name" name="first" autoComplete="given-name" required />
             <Field label="Last name" name="last" autoComplete="family-name" required />
@@ -198,7 +197,7 @@ function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBac
           </div>
         </Fieldset>
 
-        <Fieldset legend="PAYMENT">
+        <Fieldset legend="Payment">
           <Field label="Card number" name="card" inputMode="numeric" placeholder="•••• •••• •••• ••••" required />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Expiry" name="exp" placeholder="MM / YY" required />
@@ -207,24 +206,20 @@ function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBac
         </Fieldset>
       </div>
 
-      <div className="border-t border-hair px-6 py-5 shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-mute">Total</span>
-          <span className="font-mono text-ink text-[0.95rem]">{formatMoney(subtotal)}</span>
+      <div className="shrink-0 border-t border-hair px-6 py-5">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-[0.9rem] text-mute">Total</span>
+          <span className="text-[1rem] font-medium text-ink">{formatMoney(subtotal)}</span>
         </div>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full h-12 bg-ink text-paper font-mono uppercase text-[0.72rem] tracking-[0.14em] hover:bg-gold hover:text-ink transition-colors disabled:opacity-60 focus-visible:outline-gold"
-        >
-          {submitting ? 'PROCESSING…' : `PAY ${formatMoney(subtotal)}`}
+        <button type="submit" disabled={submitting} className="btn-primary w-full py-3 disabled:opacity-60">
+          {submitting ? 'Processing…' : `Pay ${formatMoney(subtotal)}`}
         </button>
         <button
           type="button"
           onClick={onBack}
-          className="w-full mt-3 font-mono uppercase text-[0.65rem] tracking-[0.14em] text-mute hover:text-ink transition-colors focus-visible:outline-gold"
+          className="mt-3 w-full text-[0.82rem] text-mute transition-colors hover:text-ink focus-visible:outline-accent"
         >
-          ← BACK TO BAG
+          ← Back to bag
         </button>
       </div>
     </form>
@@ -234,7 +229,7 @@ function CheckoutStage({ subtotal, onBack, onPlaced }: { subtotal: number; onBac
 function Fieldset({ legend, children }: { legend: string; children: React.ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="font-mono uppercase text-[0.62rem] tracking-[0.14em] text-gold mb-1">{legend}</legend>
+      <legend className="mb-1 text-[0.85rem] font-medium text-ink">{legend}</legend>
       {children}
     </fieldset>
   )
@@ -242,11 +237,11 @@ function Fieldset({ legend, children }: { legend: string; children: React.ReactN
 
 function Field({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="font-mono uppercase text-[0.58rem] tracking-[0.14em] text-mute">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[0.78rem] text-mute">{label}</span>
       <input
         {...props}
-        className="h-10 px-3 bg-transparent border border-hair text-ink font-mono text-[0.78rem] placeholder:text-mute/60 focus:border-gold focus:outline-none transition-colors"
+        className="h-11 rounded-lg border border-hair bg-paper px-3 text-[0.88rem] text-ink transition-colors placeholder:text-mute/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
       />
     </label>
   )
@@ -256,17 +251,20 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
 function DoneStage({ onClose }: { onClose: () => void }) {
   const ref = (Math.floor(Math.random() * 9000) + 1000).toString()
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-4">
-      <p className="font-mono uppercase text-[0.7rem] tracking-[0.14em] text-gold">A41 / CONFIRMED</p>
-      <p className="font-serif text-ink" style={{ fontSize: '1.7rem' }}>Thank you.</p>
-      <p className="font-mono text-mute text-[0.72rem] tracking-wide leading-relaxed max-w-[16rem]">
-        Your order <span className="text-ink">#BDG-{ref}</span> has been placed. A confirmation has been sent to your email.
-      </p>
-      <button
-        onClick={onClose}
-        className="mt-2 font-mono uppercase text-[0.7rem] tracking-[0.14em] text-ink border-b border-ink hover:text-gold hover:border-gold transition-colors pb-1 focus-visible:outline-gold"
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
+      <div
+        className="grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-xl text-accent"
+        aria-hidden="true"
       >
-        CONTINUE →
+        ✓
+      </div>
+      <p className="text-[1.5rem] font-medium text-ink">Thank you</p>
+      <p className="max-w-[18rem] text-[0.88rem] leading-relaxed text-mute">
+        Your order <span className="font-mono text-ink">#BDG-{ref}</span> has been placed.
+        A confirmation has been sent to your email.
+      </p>
+      <button onClick={onClose} className="btn-primary mt-2">
+        Continue
       </button>
     </div>
   )
