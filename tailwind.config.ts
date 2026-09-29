@@ -10,6 +10,9 @@ export default {
         // look. `accent` replaces the former `gold` token.
         accent: '#4d6bfe',
         'accent-deep': '#3a56e0',
+        // The same hue, one step lighter: the accent's stop on dark grounds,
+        // where the base accent falls under 4.5:1 for small text.
+        'accent-light': '#8ea0ff',
         paper: '#ffffff',
         'paper-2': '#f7f8fa',
         ink: '#0d0e12',
@@ -21,7 +24,9 @@ export default {
         'dark-card': '#14171f',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        sans: ['"Inter Variable"', 'Inter', 'system-ui', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        // Home display face, self-hosted with its width axis (62% to 125%).
+        display: ['"Archivo Variable"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
         jp: ['"Noto Serif JP"', 'serif'],
       },

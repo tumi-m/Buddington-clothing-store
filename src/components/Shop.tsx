@@ -172,7 +172,7 @@ function ProductCard({ product, badgeTone, onOpen, onViewInElements }: ProductCa
         {product.image ? (
           <img
             src={product.image}
-            alt={`${product.name} — ${product.colorway}`}
+            alt={`${product.name}, ${product.colorway}`}
             loading="lazy"
             decoding="async"
             className="media-zoom w-full object-cover motion-reduce:transition-none"

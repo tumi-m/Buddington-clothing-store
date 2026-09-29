@@ -247,7 +247,7 @@ function CheckoutStage({ items, subtotal, onBack, onPlaced }: CheckoutStageProps
         {/* Said plainly, because a card form that looks real and takes nothing
             is worse than one that admits what it is. */}
         <p className="rounded-lg bg-paper-2 px-3 py-2 text-[0.74rem] leading-relaxed text-mute">
-          Demonstration checkout — no card is charged and no details are sent anywhere.
+          Demonstration checkout: no card is charged and no details are sent anywhere.
         </p>
 
         <Fieldset legend="Contact">

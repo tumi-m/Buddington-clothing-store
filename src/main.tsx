@@ -4,6 +4,9 @@ import App from './App'
 import { CartProvider } from './cart/CartContext'
 import { MusicProvider } from './music/MusicContext'
 import { MusicDock } from './components/MusicDock'
+// Self-hosted faces: no third-party font request, and no fallback flash.
+import '@fontsource-variable/inter'
+import '@fontsource-variable/archivo/wdth.css'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

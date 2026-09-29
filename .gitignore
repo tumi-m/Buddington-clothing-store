@@ -7,3 +7,6 @@ dist-ssr
 .DS_Store
 Thumbs.db
 !.env.example
+
+# scroll-craft verification output
+scrollcraft/lab/

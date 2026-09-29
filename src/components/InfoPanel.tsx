@@ -29,7 +29,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
           />
           <TechItem
             label="Fabric Material"
-            detail="Three.js MeshPhysicalMaterial with fabric sheen (anisotropic gold highlight), metalness, and environment map — recreates satin/silk light behaviour."
+            detail="Three.js MeshPhysicalMaterial with fabric sheen (anisotropic gold highlight), metalness, and environment map, recreating satin/silk light behaviour."
             color="text-purple-400"
           />
           <TechItem
@@ -39,7 +39,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
           />
           <TechItem
             label="Experimental: HTML-in-Canvas"
-            detail="Chrome's WICG proposal (canvas-draw-element flag) would allow drawElementImage() to paint live DOM directly as a GPU texture — making every hover, animation, and button fully interactive on the cloth."
+            detail="Chrome's WICG proposal (canvas-draw-element flag) would allow drawElementImage() to paint live DOM directly as a GPU texture, making every hover, animation, and button fully interactive on the cloth."
             color="text-green-400"
           />
           <TechItem
@@ -56,7 +56,7 @@ export function InfoPanel({ onClose }: InfoPanelProps) {
             <li>Open Chrome and navigate to <code className="text-green-400">chrome://flags</code></li>
             <li>Search for <code className="text-green-400">canvas-draw-element</code></li>
             <li>Set to <strong className="text-white">Enabled</strong> and relaunch</li>
-            <li>Return here — the cloth will render live interactive DOM</li>
+            <li>Return here: the cloth will render live interactive DOM</li>
           </ol>
         </div>
 

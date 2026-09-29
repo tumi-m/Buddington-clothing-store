@@ -64,7 +64,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
               {product.image ? (
                 <img
                   src={product.image}
-                  alt={`${product.name} — front`}
+                  alt={`${product.name}, front`}
                   loading="eager"
                   decoding="sync"
                   className="media-zoom w-full object-cover"
@@ -127,7 +127,7 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
               <div className="flex items-baseline justify-between gap-3">
                 <span id="size-label" className="text-[0.9rem] font-medium text-ink">Size</span>
                 <span className="text-[0.8rem] text-mute">
-                  {size ? `Selected: ${size}` : 'Cut oversized — see sizing'}
+                  {size ? `Selected: ${size}` : 'Cut oversized. See sizing below.'}
                 </span>
               </div>
               <div
@@ -172,10 +172,6 @@ export function ProductDetail({ product, onBack, onViewInElements }: ProductDeta
               <button onClick={() => onViewInElements(product.id)} className="btn-secondary">
                 View in the elements
               </button>
-            </Reveal>
-
-            <Reveal as="p" variant="up" delay={480} className="mt-4 text-[0.82rem] text-mute">
-              Free returns within 30 days · Ships from Cape Town
             </Reveal>
 
             {/* Spec accordion */}

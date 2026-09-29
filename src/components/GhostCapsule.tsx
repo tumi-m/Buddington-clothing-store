@@ -70,7 +70,7 @@ export function GhostCapsule() {
             className="mt-6 max-w-[36rem] text-paper/60"
             style={{ fontSize: '1.08rem', lineHeight: 1.65 }}
           >
-            A sub-line that breaks silhouette against the gaze of machines — tonal dazzle,
+            A sub-line that breaks silhouette against the gaze of machines: tonal dazzle,
             interference, and negative space worn as armour.
           </Reveal>
 
@@ -87,7 +87,7 @@ export function GhostCapsule() {
                   {/* Real photograph, rendered monochrome + darkened to read as GHOST */}
                   <img
                     src={item.image}
-                    alt={`${item.name} — GHOST capsule`}
+                    alt={`${item.name}, Ghost capsule`}
                     loading="lazy"
                     decoding="async"
                     className="media-zoom absolute inset-0 h-full w-full object-cover"
@@ -130,7 +130,7 @@ export function GhostCapsule() {
         <section className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8">
           {/* Honest framing line (asset-gen.md) */}
           <p className="max-w-[50rem] text-[0.82rem] leading-relaxed text-paper/40">
-            Ghost is an aesthetic homage to adversarial fashion — not a guaranteed defeat of
+            Ghost is an aesthetic homage to adversarial fashion, not a guaranteed defeat of
             computer vision.
           </p>
         </section>

@@ -30,7 +30,7 @@ export function FolioFooter({ tone = 'paper' }: FolioFooterProps) {
           <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.82rem] ${txt}`}>
             <span>Est. Cape Town MCMLXXXIV</span>
             <span aria-hidden="true" className="hidden sm:inline">·</span>
-            <span>Cape Town — Tokyo</span>
+            <span>Cape Town to Tokyo</span>
             <span aria-hidden="true" className="hidden sm:inline">·</span>
             <span className="font-jp">バディントン</span>
           </div>

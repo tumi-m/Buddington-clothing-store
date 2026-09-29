@@ -11,7 +11,7 @@
 import type { CSSProperties, ElementType, ReactNode } from 'react'
 import { useReveal } from '../hooks/useReveal'
 
-export type RevealVariant = 'up' | 'rise' | 'scale' | 'blur' | 'wipe' | 'wipe-x'
+export type RevealVariant = 'up' | 'rise' | 'scale' | 'blur' | 'wipe' | 'wipe-x' | 'iris'
 
 export interface RevealProps {
   children: ReactNode
@@ -21,6 +21,10 @@ export interface RevealProps {
   delay?: number
   className?: string
   style?: CSSProperties
+  /** Classes for the animated inner layer. Needed when the host is absolutely
+   *  positioned: the inner span is otherwise zero-height, and a clip-path on a
+   *  zero-height box clips its absolutely placed children away entirely. */
+  innerClassName?: string
   /** Element to render. Defaults to a div. */
   as?: ElementType
 }
@@ -31,6 +35,7 @@ export function Reveal({
   delay = 0,
   className = '',
   style,
+  innerClassName = '',
   as: Tag = 'div',
 }: RevealProps) {
   const reveal = useReveal()
@@ -40,7 +45,7 @@ export function Reveal({
   // it directly would never fire and the content would never appear.
   return (
     <Tag ref={reveal} className={`rv-host ${className}`} style={style}>
-      <span className={`rv rv-${variant}`} style={{ transitionDelay: `${delay}ms` }}>
+      <span className={`rv rv-${variant} ${innerClassName}`} style={{ transitionDelay: `${delay}ms` }}>
         {children}
       </span>
     </Tag>
@@ -85,7 +90,10 @@ export function WordReveal({
           key={`${word}-${i}`}
           ref={reveal}
           aria-hidden="true"
-          className="rv-host inline-block overflow-hidden align-bottom"
+          // The clip box gets extra room below the line and gives it back with
+          // a negative margin. A mask cut to the line box shears the tails off
+          // g, y, p and j, the most common way split type looks broken.
+          className="rv-host inline-block overflow-hidden pb-[0.14em] -mb-[0.14em] align-bottom"
         >
           <span
             className="rv rv-rise"

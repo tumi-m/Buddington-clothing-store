@@ -53,7 +53,7 @@ export function MusicDock() {
     return () => window.removeEventListener('keydown', onKey)
   }, [m.open, m.setOpen])
 
-  const pillText = np ? `${np.title} — ${np.artist}` : m.embed ? linkLabel(m.embed) : null
+  const pillText = np ? `${np.title} · ${np.artist}` : m.embed ? linkLabel(m.embed) : null
   const playing = np ? np.playing : Boolean(m.embed)
 
   return (
@@ -226,7 +226,7 @@ function EmbedPlayer({ link, onStop }: { link: MusicLink; onStop: () => void }) 
         }
       />
       <div className="flex items-center justify-between mt-2 gap-3">
-        <Note>Playing in {PROVIDER_NAME[link.provider]}’s own player — what you hear depends on your account there.</Note>
+        <Note>Playing in {PROVIDER_NAME[link.provider]}’s own player. What you hear depends on your account there.</Note>
         <a
           href={link.openUrl}
           target="_blank"

@@ -217,7 +217,7 @@ export default function App() {
   const product = productId ? getProductById(productId) : undefined
 
   return (
-    <div ref={scrollerRef} className="absolute inset-0 overflow-y-auto bg-paper text-ink">
+    <div ref={scrollerRef} data-scroller className="absolute inset-0 overflow-y-auto bg-paper text-ink">
       {/* Keyboard users can jump the nav straight to the page content. */}
       <a
         href="#main"
@@ -225,10 +225,10 @@ export default function App() {
       >
         Skip to content
       </a>
-      <Nav view={view} onNavigate={navigate} />
+      <Nav view={view} onNavigate={navigate} tone={view === 'home' ? 'loud' : 'default'} />
       {/* `key` restarts the entrance animation on every view change. */}
       <main id="main" key={view} className="view-enter">
-        {view === 'home' && <Home onNavigate={navigate} />}
+        {view === 'home' && <Home onNavigate={navigate} onOpenProduct={openProduct} />}
         {view === 'shop' && <Shop onOpenProduct={openProduct} onNavigate={navigate} onViewInElements={enterExperience} />}
         {view === 'product' && product && (
           <ProductDetail product={product} onBack={() => navigate('shop')} onViewInElements={enterExperience} />
